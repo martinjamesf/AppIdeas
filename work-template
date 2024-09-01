@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Title - James Martin</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="logo"><a href="index.html">James Martin</a></div>
+        <nav>
+            <ul>
+                <li><a href="about.html">About</a></li>
+                <li><a href="mailto:contact@example.com">Contact Me</a></li>
+                <li><a href="https://www.linkedin.com/in/yourprofile" target="_blank">LinkedIn</a></li>
+            </ul>
+        </nav>
+    </header>
+    <div class="work-page">
+        <div class="header-image">
+            <img src="project-header.jpg" alt="Project Header Image">
+        </div>
+        <h1>Project Title</h1>
+        <p class="date">Date of Project</p>
+        <section>
+            <h2>Project Overview</h2>
+            <p><!-- Project Overview placeholder text -->Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin consequat elit ut magna...</p>
+        </section>
+        <section>
+            <h2>Your Role</h2>
+            <p><!-- Your Role placeholder text -->Lead UX Designer, responsible for the end-to-end user experience...</p>
+        </section>
+        <section>
+            <h2>Process</h2>
+            <p><!-- Process placeholder text -->Conducted user research, created wireframes, developed prototypes, and led usability testing...</p>
+            <img src="process-image.jpg" alt="Process Image">
+        </section>
+        <section>
+            <h2>Outcome</h2>
+            <p><!-- Outcome placeholder text -->The project resulted in a 30% increase in user engagement and a more intuitive user interface...</p>
+        </section>
+        <section>
+            <h2>Conclusion</h2>
+            <p><!-- Conclusion placeholder text -->This project taught me the importance of iterative design and user feedback in achieving a successful outcome...</p>
+        </section>
+    </div>
+</body>
+</html>
