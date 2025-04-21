@@ -1,140 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>James Martin - UX Portfolio</title>
-    <link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DIY Bike Fit</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+  <style>
+    .fit-result { margin-top: 2rem; }
+    video { max-width: 100%; margin-top: 1rem; }
+  </style>
 </head>
 <body>
-    <header class="navbar">
-        <div class="logo"><a href="index.html">James Martin</a></div>
-        <nav>
-            <ul>
-                <li><a href="about.html">About</a></li>
-                <li><a href="mailto:martin.jamesfrancis+portfolio@gmail.com">Contact Me</a></li>
-                <li><a href="https://www.linkedin.com/in/martinjamesf/" target="_blank">LinkedIn</a></li>
-            </ul>
-        </nav>
-    </header>
-    <div class="landing-page">
-        <div class="full-screen-image">
-            <img src="img/presenter.jpg" alt="Full Screen Image">
-            <div class="overlay">
-                <h1>James Martin</h1>
-                <p>UX Design Leader</p>
-            </div>
-        </div>
-    </div>
-    <section class="project-covers" data-context="page.gallery.covers">
-        <a class="project-cover js-project-cover-touch hold-space" href="work-template.html" data-context="pages" data-identity="id:case1">
-            <div class="cover-content-container">
-                <div class="cover-image-wrap">
-                    <div class="cover-image">
-                        <div class="cover cover-normal">
-                            <img class="cover__img js-lazy image-loaded" src="https://via.placeholder.com/844x660" alt="Case Study 1">
-                        </div>
-                    </div>
-                </div>
-                <div class="details-wrap">
-                    <div class="details">
-                        <div class="details-inner">
-                            <h3>Case Study 1</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        <a class="project-cover js-project-cover-touch hold-space" href="work-template.html" data-context="pages" data-identity="id:case2">
-            <div class="cover-content-container">
-                <div class="cover-image-wrap">
-                    <div class="cover-image">
-                        <div class="cover cover-normal">
-                            <img class="cover__img js-lazy image-loaded" src="https://via.placeholder.com/844x660" alt="Case Study 2">
-                        </div>
-                    </div>
-                </div>
-                <div class="details-wrap">
-                    <div class="details">
-                        <div class="details-inner">
-                            <h3>Case Study 2</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        <a class="project-cover js-project-cover-touch hold-space" href="work-template.html" data-context="pages" data-identity="id:case3">
-            <div class="cover-content-container">
-                <div class="cover-image-wrap">
-                    <div class="cover-image">
-                        <div class="cover cover-normal">
-                            <img class="cover__img js-lazy image-loaded" src="https://via.placeholder.com/844x660" alt="Case Study 3">
-                        </div>
-                    </div>
-                </div>
-                <div class="details-wrap">
-                    <div class="details">
-                        <div class="details-inner">
-                            <h3>Case Study 3</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        <a class="project-cover js-project-cover-touch hold-space" href="work-template.html" data-context="pages" data-identity="id:case4">
-            <div class="cover-content-container">
-                <div class="cover-image-wrap">
-                    <div class="cover-image">
-                        <div class="cover cover-normal">
-                            <img class="cover__img js-lazy image-loaded" src="https://via.placeholder.com/844x660" alt="Case Study 4">
-                        </div>
-                    </div>
-                </div>
-                <div class="details-wrap">
-                    <div class="details">
-                        <div class="details-inner">
-                            <h3>Case Study 4</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        <a class="project-cover js-project-cover-touch hold-space" href="work-template.html" data-context="pages" data-identity="id:case5">
-            <div class="cover-content-container">
-                <div class="cover-image-wrap">
-                    <div class="cover-image">
-                        <div class="cover cover-normal">
-                            <img class="cover__img js-lazy image-loaded" src="https://via.placeholder.com/844x660" alt="Case Study 5">
-                        </div>
-                    </div>
-                </div>
-                <div class="details-wrap">
-                    <div class="details">
-                        <div class="details-inner">
-                            <h3>Case Study 5</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
-        <a class="project-cover js-project-cover-touch hold-space" href="work-template.html" data-context="pages" data-identity="id:case6">
-            <div class="cover-content-container">
-                <div class="cover-image-wrap">
-                    <div class="cover-image">
-                        <div class="cover cover-normal">
-                            <img class="cover__img js-lazy image-loaded" src="https://via.placeholder.com/844x660" alt="Case Study 6">
-                        </div>
-                    </div>
-                </div>
-                <div class="details-wrap">
-                    <div class="details">
-                        <div class="details-inner">
-                            <h3>Case Study 6</h3>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </a>
+  <main class="container">
+    <h1>DIY Bike Fit</h1>
+    <form id="fitForm">
+      <h2>Body Measurements</h2>
+      <label>Height (cm) <input type="number" id="height" required /></label>
+      <label>Inseam (cm) <input type="number" id="inseam" required /></label>
+      <label>Arm Length (cm) <input type="number" id="armLength" /></label>
+      <label>Torso Length (cm) <input type="number" id="torsoLength" /></label>
+
+      <h2>Current Bike Setup</h2>
+      <label>Saddle Height (cm) <input type="number" id="saddleHeight" /></label>
+      <label>Saddle Setback (cm) <input type="number" id="saddleSetback" /></label>
+      <label>Stem Length (mm) <input type="number" id="stemLength" /></label>
+      <label>Handlebar Drop (cm) <input type="number" id="handlebarDrop" /></label>
+
+      <button type="submit">Get Fit Recommendations</button>
+    </form>
+
+    <section class="fit-result" id="result" hidden>
+      <h2>Fit Recommendations</h2>
+      <ul id="recommendations"></ul>
     </section>
+
+    <hr />
+
+    <h2>Video Upload (Beta)</h2>
+    <input type="file" id="videoUpload" accept="video/*" />
+    <video id="uploadedVideo" controls></video>
+  </main>
+
+  <script>
+    const form = document.getElementById('fitForm');
+    const result = document.getElementById('result');
+    const recommendations = document.getElementById('recommendations');
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+
+      const height = parseFloat(document.getElementById('height').value);
+      const inseam = parseFloat(document.getElementById('inseam').value);
+      const saddleHeight = parseFloat(document.getElementById('saddleHeight').value);
+
+      // Simple Lemond method: Saddle height = Inseam * 0.883
+      const recommendedSaddleHeight = (inseam * 0.883).toFixed(1);
+
+      recommendations.innerHTML = `
+        <li><strong>Recommended Saddle Height:</strong> ${recommendedSaddleHeight} cm</li>
+        ${saddleHeight ? `<li><strong>Your Current Saddle Height:</strong> ${saddleHeight} cm</li>` : ''}
+        ${saddleHeight ? `<li><strong>Adjustment:</strong> ${(recommendedSaddleHeight - saddleHeight).toFixed(1)} cm</li>` : ''}
+      `;
+
+      result.hidden = false;
+    });
+
+    // Video Upload Preview
+    document.getElementById('videoUpload').addEventListener('change', function () {
+      const file = this.files[0];
+      if (file) {
+        const url = URL.createObjectURL(file);
+        const video = document.getElementById('uploadedVideo');
+        video.src = url;
+        video.load();
+      }
+    });
+  </script>
 </body>
 </html>
