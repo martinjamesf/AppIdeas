@@ -2,79 +2,76 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DIY Bike Fit</title>
-  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Concept Prototypes</title>
   <style>
-    .fit-result { margin-top: 2rem; }
-    video { max-width: 100%; margin-top: 1rem; }
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background-color: #f9f9f9;
+      color: #333;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: 2rem;
+    }
+    .app-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .app-card {
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      background-color: #fff;
+      border: 1px solid #ddd;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: transform 0.2s;
+    }
+    .app-card:hover {
+      transform: translateY(-2px);
+    }
+    .app-card h2 {
+      margin: 0 0 0.5rem;
+    }
+    .app-card p {
+      margin: 0 0 1rem;
+      color: #666;
+    }
+    .app-card a {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .app-card a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <main class="container">
-    <h1>DIY Bike Fit</h1>
-    <form id="fitForm">
-      <h2>Body Measurements</h2>
-      <label>Height (cm) <input type="number" id="height" required /></label>
-      <label>Inseam (cm) <input type="number" id="inseam" required /></label>
-      <label>Arm Length (cm) <input type="number" id="armLength" /></label>
-      <label>Torso Length (cm) <input type="number" id="torsoLength" /></label>
+  <header>
+    <h1>Concept Prototypes</h1>
+    <p>Explore early-stage app ideas</p>
+  </header>
 
-      <h2>Current Bike Setup</h2>
-      <label>Saddle Height (cm) <input type="number" id="saddleHeight" /></label>
-      <label>Saddle Setback (cm) <input type="number" id="saddleSetback" /></label>
-      <label>Stem Length (mm) <input type="number" id="stemLength" /></label>
-      <label>Handlebar Drop (cm) <input type="number" id="handlebarDrop" /></label>
+  <main class="app-list">
+    <div class="app-card">
+      <h2>Bike Form</h2>
+      <p>An app for getting a simple bike fitting based on body and bike measurements.</p>
+      <a href="bike-form.html">View Prototype →</a>
+    </div>
 
-      <button type="submit">Get Fit Recommendations</button>
-    </form>
-
-    <section class="fit-result" id="result" hidden>
-      <h2>Fit Recommendations</h2>
-      <ul id="recommendations"></ul>
-    </section>
-
-    <hr />
-
-    <h2>Video Upload (Beta)</h2>
-    <input type="file" id="videoUpload" accept="video/*" />
-    <video id="uploadedVideo" controls></video>
+    <div class="app-card">
+      <h2>Task Manager</h2>
+      <p>A tool for managing tasks with workflows, dependencies, and grouping logic.</p>
+      <a href="task-manager.html">View Prototype →</a>
+    </div>
   </main>
-
-  <script>
-    const form = document.getElementById('fitForm');
-    const result = document.getElementById('result');
-    const recommendations = document.getElementById('recommendations');
-
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-
-      const height = parseFloat(document.getElementById('height').value);
-      const inseam = parseFloat(document.getElementById('inseam').value);
-      const saddleHeight = parseFloat(document.getElementById('saddleHeight').value);
-
-      // Simple Lemond method: Saddle height = Inseam * 0.883
-      const recommendedSaddleHeight = (inseam * 0.883).toFixed(1);
-
-      recommendations.innerHTML = `
-        <li><strong>Recommended Saddle Height:</strong> ${recommendedSaddleHeight} cm</li>
-        ${saddleHeight ? `<li><strong>Your Current Saddle Height:</strong> ${saddleHeight} cm</li>` : ''}
-        ${saddleHeight ? `<li><strong>Adjustment:</strong> ${(recommendedSaddleHeight - saddleHeight).toFixed(1)} cm</li>` : ''}
-      `;
-
-      result.hidden = false;
-    });
-
-    // Video Upload Preview
-    document.getElementById('videoUpload').addEventListener('change', function () {
-      const file = this.files[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        const video = document.getElementById('uploadedVideo');
-        video.src = url;
-        video.load();
-      }
-    });
-  </script>
 </body>
 </html>
