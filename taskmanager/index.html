@@ -167,7 +167,7 @@
   <table id="taskTable">
     <thead>
       <tr>
-        <th></th>
+        <th><input type="checkbox" id="selectAll" /></th>
         <th></th>
         <th>#</th>
         <th>Task Name</th>
@@ -355,6 +355,14 @@
     });
 
     createTaskRow("Initial Task");
+
+    document.getElementById('selectAll').addEventListener('change', function () {
+      const checked = this.checked;
+      const checkboxes = taskTable.querySelectorAll('.select-row');
+      checkboxes.forEach(cb => cb.checked = checked);
+      bulkActions.classList.toggle('active', checked || [...checkboxes].some(cb => cb.checked));
+    });
+
   </script>
 </body>
 
