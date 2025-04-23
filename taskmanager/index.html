@@ -384,11 +384,14 @@
           const anchor = document.createElement("a");
           anchor.href = "#";
           anchor.textContent = nameCell.querySelector("input").value;
+
           anchor.addEventListener("click", (e) => {
             e.preventDefault();
             openTaskModal(row);
           });
+
           nameCell.appendChild(anchor);
+
         }
       });
 
