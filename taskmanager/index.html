@@ -261,26 +261,24 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
-    const taskTableBody = document.querySelector("#task-table tbody");
-    const editToggleBtn = document.getElementById("edit-toggle");
-    const applyWorkflowBtn = document.getElementById("apply-workflow");
-    const downloadBtn = document.getElementById("download-json");
-    const uploadInput = document.getElementById("upload-json");
-  
+    const taskTableBody = document.querySelector("#taskTable tbody");
+    const editToggleBtn = document.getElementById("toggleEdit");
+    const applyWorkflowBtn = document.getElementById("applyWorkflow");
+
     let isEditing = false;
-  
+
     function createTaskRow(task = {}) {
       const row = document.createElement("tr");
-  
+
       const idCell = document.createElement("td");
       idCell.textContent = "";
-  
+
       const seqCell = document.createElement("td");
       const seqInput = document.createElement("input");
       seqInput.type = "text";
       seqInput.value = task.creationSequence || "";
       seqCell.appendChild(seqInput);
-  
+
       const typeCell = document.createElement("td");
       const typeSelect = document.createElement("select");
       ["Independent", "Sequential", "Parallel"].forEach(type => {
@@ -291,7 +289,7 @@
         typeSelect.appendChild(option);
       });
       typeCell.appendChild(typeSelect);
-  
+
       const nameCell = document.createElement("td");
       const nameInput = document.createElement("input");
       nameInput.type = "text";
@@ -304,13 +302,13 @@
         openTaskModal(row);
       });
       nameCell.appendChild(isEditing ? nameInput : nameLink);
-  
+
       const descCell = document.createElement("td");
       const descInput = document.createElement("input");
       descInput.type = "text";
       descInput.value = task.description || "";
       descCell.appendChild(descInput);
-  
+
       const deleteCell = document.createElement("td");
       const deleteBtn = document.createElement("button");
       deleteBtn.textContent = "🗑";
@@ -321,11 +319,11 @@
         saveToLocalStorage();
       });
       deleteCell.appendChild(deleteBtn);
-  
+
       row.append(idCell, seqCell, typeCell, nameCell, descCell, deleteCell);
       return row;
     }
-  
+
     function addTask(task = {}) {
       const row = createTaskRow(task);
       taskTableBody.appendChild(row);
@@ -333,17 +331,17 @@
       saveToLocalStorage();
       enforceApplicationAfterESignature();
     }
-  
+
     function updateTaskNumbers() {
       const rows = Array.from(taskTableBody.querySelectorAll("tr"));
       let groupCounter = 1;
       let subCounter = 1;
       let previousType = "";
-  
+
       rows.forEach((row, index) => {
         const type = row.querySelector("select").value;
         const cell = row.querySelector("td");
-  
+
         if (type === "Independent") {
           cell.textContent = groupCounter++;
           subCounter = 1;
@@ -362,20 +360,20 @@
             cell.textContent = `${groupCounter++}`;
           }
         }
-  
+
         previousType = type;
       });
     }
-  
+
     function toggleEditMode() {
       isEditing = !isEditing;
       editToggleBtn.textContent = isEditing ? "Save" : "Edit";
-  
+
       Array.from(taskTableBody.querySelectorAll("tr")).forEach(row => {
         const nameCell = row.querySelector("td:nth-child(4)");
         const currentName = nameCell.textContent.trim();
         nameCell.innerHTML = "";
-  
+
         if (isEditing) {
           const input = document.createElement("input");
           input.type = "text";
@@ -392,10 +390,10 @@
           nameCell.appendChild(anchor);
         }
       });
-  
+
       saveToLocalStorage();
     }
-  
+
     function saveToLocalStorage() {
       const tasks = Array.from(taskTableBody.querySelectorAll("tr")).map(row => ({
         creationSequence: row.querySelector("td:nth-child(2) input").value,
@@ -407,54 +405,54 @@
       }));
       localStorage.setItem("taskManagerData", JSON.stringify(tasks));
     }
-  
+
     function loadFromLocalStorage() {
       const data = JSON.parse(localStorage.getItem("taskManagerData") || "[]");
       data.forEach(addTask);
       enforceApplicationAfterESignature();
     }
-  
+
     function enforceApplicationAfterESignature() {
       const taskRows = Array.from(taskTableBody.querySelectorAll("tr"));
-  
+
       let eSigRow = null;
       let appRow = null;
-  
+
       taskRows.forEach(row => {
         const nameCell = row.querySelector("td:nth-child(4)");
         const name = nameCell.querySelector("input")?.value?.trim() ||
-                     nameCell.querySelector("a")?.textContent?.trim() || "";
-  
+          nameCell.querySelector("a")?.textContent?.trim() || "";
+
         if (name === "eSignature") {
           eSigRow = row;
         } else if (name === "Application") {
           appRow = row;
         }
       });
-  
+
       if (!appRow) return;
-  
+
       const typeSelect = appRow.querySelector("select");
       if (typeSelect.value !== "Sequential") {
         typeSelect.value = "Sequential";
         typeSelect.dispatchEvent(new Event("change"));
       }
-  
+
       if (eSigRow && eSigRow !== appRow.previousElementSibling) {
         const nextSibling = eSigRow.nextSibling;
         taskTableBody.removeChild(appRow);
         taskTableBody.insertBefore(appRow, nextSibling);
       }
-  
+
       updateTaskNumbers();
     }
-  
+
     function openTaskModal(row) {
       alert("Modal for task: " + (isEditing
         ? row.querySelector("td:nth-child(4) input").value
         : row.querySelector("td:nth-child(4) a").textContent));
     }
-  
+
     editToggleBtn.addEventListener("click", toggleEditMode);
     downloadBtn.addEventListener("click", () => {
       const data = localStorage.getItem("taskManagerData");
@@ -466,7 +464,7 @@
       a.click();
       URL.revokeObjectURL(url);
     });
-  
+
     uploadInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
@@ -479,7 +477,7 @@
       };
       reader.readAsText(file);
     });
-  
+
     applyWorkflowBtn.addEventListener("change", () => {
       const selected = applyWorkflowBtn.value;
       applyWorkflowBtn.value = "";
@@ -496,7 +494,7 @@
       }
       enforceApplicationAfterESignature();
     });
-  
+
     new Sortable(taskTableBody, {
       animation: 150,
       onEnd: () => {
@@ -505,10 +503,10 @@
         saveToLocalStorage();
       },
     });
-  
+
     loadFromLocalStorage();
   </script>
-  
+
 
 </body>
 
