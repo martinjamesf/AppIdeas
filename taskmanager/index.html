@@ -354,12 +354,15 @@
       const template = workflows[e.target.value];
       if (template) template.forEach(name => createTaskRow(name));
       e.target.value = "";
+      enforceApplicationAfterESignature();
     };
 
     toggleEditBtn.onclick = () => {
       editMode = !editMode;
       toggleEditBtn.textContent = editMode ? "Save" : "Edit";
       renderRows();
+      enforceApplicationAfterESignature();
+
     };
 
     function renderRows() {
@@ -415,6 +418,38 @@
       document.getElementById('taskModal').classList.remove('active');
       currentModalRow = null;
     }
+    function enforceApplicationAfterESignature() {
+      const rows = Array.from(taskTable.rows);
+      let eSigRow = null;
+      let appRow = null;
+
+      rows.forEach(row => {
+        const nameInput = row.querySelector('.task-name-cell input');
+        const nameLink = row.querySelector('.task-link');
+        const taskName = nameInput?.value || nameLink?.textContent || "";
+
+        if (taskName.trim().toLowerCase() === 'esignature') {
+          eSigRow = row;
+        }
+        if (taskName.trim().toLowerCase() === 'application') {
+          appRow = row;
+        }
+      });
+
+      if (eSigRow && appRow) {
+        const eSigIndex = rows.indexOf(eSigRow);
+        const appIndex = rows.indexOf(appRow);
+        if (appIndex < eSigIndex || appIndex !== eSigIndex + 1) {
+          taskTable.removeChild(appRow);
+          taskTable.insertBefore(appRow, taskTable.rows[eSigIndex + 1]);
+        }
+
+        const groupSelect = appRow.querySelector('select');
+        if (groupSelect) {
+          groupSelect.value = 'Sequential';
+        }
+      }
+    }
 
 
     document.addEventListener('click', e => {
@@ -450,7 +485,11 @@
     Sortable.create(taskTable, {
       handle: '.drag-handle',
       animation: 150,
-      onEnd: () => updateNumbering()
+      onEnd: function () {
+        updateNumbering();
+        saveToLocalStorage();
+        enforceApplicationAfterESignature(); // <-- Add this
+      },
     });
 
     createTaskRow("Initial Task");
