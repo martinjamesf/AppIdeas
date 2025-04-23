@@ -261,207 +261,254 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const taskTableBody = document.getElementById("taskTableBody");
-      const editToggle = document.getElementById("editToggle");
-      const applyWorkflowBtn = document.getElementById("applyWorkflow");
-      const downloadBtn = document.getElementById("downloadBtn");
-      const uploadInput = document.getElementById("uploadInput");
-
-      let isEditing = false;
-
-      const defaultTask = {
-        name: "New Task",
-        type: "Independent",
-        sequence: "",
-        notes: ""
-      };
-
-      const workflowTemplates = {
-        "Risk Policy Opening": [
-          { name: "eSignature", type: "Independent", sequence: "", notes: "" },
-          { name: "Application", type: "Sequential", sequence: "", notes: "" },
-          { name: "Verification", type: "Parallel", sequence: "", notes: "" }
-        ],
-        "Wealth Account Opening": [
-          { name: "eSignature", type: "Independent", sequence: "", notes: "" },
-          { name: "Application", type: "Sequential", sequence: "", notes: "" },
-          { name: "Funding", type: "Parallel", sequence: "", notes: "" }
-        ]
-      };
-
-      function addTask(task = defaultTask) {
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td class="handle" style="cursor: grab;">☰</td>
-          <td class="task-number"></td>
-          <td><select ${!isEditing ? "disabled" : ""}>
-            <option value="Independent"${task.type === "Independent" ? " selected" : ""}>Independent</option>
-            <option value="Sequential"${task.type === "Sequential" ? " selected" : ""}>Sequential</option>
-            <option value="Parallel"${task.type === "Parallel" ? " selected" : ""}>Parallel</option>
-          </select></td>
-          <td>${isEditing ? `<input type="text" value="${task.name}">` : `<a href="#">${task.name}</a>`}</td>
-          <td><input type="text" value="${task.sequence}" ${!isEditing ? "readonly" : ""}></td>
-          <td>${isEditing ? `<textarea>${task.notes}</textarea>` : `<span>${task.notes}</span>`}</td>
-          <td><button class="delete">🗑️</button></td>
-        `;
-
-        row.querySelector(".delete").addEventListener("click", () => {
-          row.remove();
-          saveToLocalStorage();
-          updateTaskNumbers();
-        });
-
-        row.querySelector("a")?.addEventListener("click", (e) => {
-          e.preventDefault();
-          openModal(row);
-        });
-
-        taskTableBody.appendChild(row);
+    const taskTableBody = document.querySelector("#task-table tbody");
+    const editToggleBtn = document.getElementById("edit-toggle");
+    const applyWorkflowBtn = document.getElementById("apply-workflow");
+    const downloadBtn = document.getElementById("download-json");
+    const uploadInput = document.getElementById("upload-json");
+  
+    let isEditing = false;
+  
+    function createTaskRow(task = {}) {
+      const row = document.createElement("tr");
+  
+      const idCell = document.createElement("td");
+      idCell.textContent = "";
+  
+      const seqCell = document.createElement("td");
+      const seqInput = document.createElement("input");
+      seqInput.type = "text";
+      seqInput.value = task.creationSequence || "";
+      seqCell.appendChild(seqInput);
+  
+      const typeCell = document.createElement("td");
+      const typeSelect = document.createElement("select");
+      ["Independent", "Sequential", "Parallel"].forEach(type => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        if (task.type === type) option.selected = true;
+        typeSelect.appendChild(option);
+      });
+      typeCell.appendChild(typeSelect);
+  
+      const nameCell = document.createElement("td");
+      const nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.value = task.name || "";
+      const nameLink = document.createElement("a");
+      nameLink.href = "#";
+      nameLink.textContent = task.name || "";
+      nameLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        openTaskModal(row);
+      });
+      nameCell.appendChild(isEditing ? nameInput : nameLink);
+  
+      const descCell = document.createElement("td");
+      const descInput = document.createElement("input");
+      descInput.type = "text";
+      descInput.value = task.description || "";
+      descCell.appendChild(descInput);
+  
+      const deleteCell = document.createElement("td");
+      const deleteBtn = document.createElement("button");
+      deleteBtn.textContent = "🗑";
+      deleteBtn.className = "outline contrast";
+      deleteBtn.addEventListener("click", () => {
+        row.remove();
         updateTaskNumbers();
-        enforceApplicationAfterESignature();
         saveToLocalStorage();
-      }
-
-      function updateTaskNumbers() {
-        const rows = Array.from(taskTableBody.children);
-        let groupCount = 1;
-
-        for (let i = 0; i < rows.length; i++) {
-          const type = rows[i].querySelector("select").value;
-          const cell = rows[i].querySelector(".task-number");
-
-          // If this is the start of a new group
-          if (type === "Independent") {
-            cell.textContent = `${groupCount}`;
-            groupCount++;
-          } else if (type === "Sequential") {
-            let subCount = 1;
-            cell.textContent = `${groupCount - 1}.${subCount}`;
-            for (let j = i + 1; j < rows.length && rows[j].querySelector("select").value === "Sequential"; j++) {
-              subCount++;
-              rows[j].querySelector(".task-number").textContent = `${groupCount - 1}.${subCount}`;
-              i = j;
-            }
-          } else if (type === "Parallel") {
-            cell.textContent = `${groupCount - 1}`;
-            for (let j = i + 1; j < rows.length && rows[j].querySelector("select").value === "Parallel"; j++) {
-              rows[j].querySelector(".task-number").textContent = `${groupCount - 1}`;
-              i = j;
-            }
+      });
+      deleteCell.appendChild(deleteBtn);
+  
+      row.append(idCell, seqCell, typeCell, nameCell, descCell, deleteCell);
+      return row;
+    }
+  
+    function addTask(task = {}) {
+      const row = createTaskRow(task);
+      taskTableBody.appendChild(row);
+      updateTaskNumbers();
+      saveToLocalStorage();
+      enforceApplicationAfterESignature();
+    }
+  
+    function updateTaskNumbers() {
+      const rows = Array.from(taskTableBody.querySelectorAll("tr"));
+      let groupCounter = 1;
+      let subCounter = 1;
+      let previousType = "";
+  
+      rows.forEach((row, index) => {
+        const type = row.querySelector("select").value;
+        const cell = row.querySelector("td");
+  
+        if (type === "Independent") {
+          cell.textContent = groupCounter++;
+          subCounter = 1;
+        } else if (type === "Sequential") {
+          if (previousType === "Sequential") {
+            cell.textContent = `${groupCounter - 1}.${subCounter++}`;
+          } else {
+            subCounter = 1;
+            cell.textContent = `${groupCounter}.${subCounter++}`;
+            groupCounter++;
+          }
+        } else if (type === "Parallel") {
+          if (previousType === "Parallel") {
+            cell.textContent = `${groupCounter - 1}`;
+          } else {
+            cell.textContent = `${groupCounter++}`;
           }
         }
-      }
-
-      function saveToLocalStorage() {
-        const tasks = Array.from(taskTableBody.children).map(row => ({
-          type: row.querySelector("select").value,
-          name: row.querySelector("input[type='text'], a").value || row.querySelector("a")?.textContent,
-          sequence: row.querySelector("td:nth-child(5) input").value,
-          notes: isEditing ? row.querySelector("textarea").value : row.querySelector("span").textContent
-        }));
-        localStorage.setItem("taskManagerData", JSON.stringify(tasks));
-      }
-
-      function loadFromLocalStorage() {
-        const tasks = JSON.parse(localStorage.getItem("taskManagerData") || "[]");
-        tasks.forEach(addTask);
-      }
-
-      function enforceApplicationAfterESignature() {
-        const taskRows = Array.from(taskTableBody.querySelectorAll("tr"));
-        const eSigIndex = taskRows.findIndex(row =>
-          (row.querySelector("td:nth-child(4) input")?.value || row.querySelector("td:nth-child(4) a")?.textContent)?.trim() === "eSignature"
-        );
-        const appIndex = taskRows.findIndex(row =>
-          (row.querySelector("td:nth-child(4) input")?.value || row.querySelector("td:nth-child(4) a")?.textContent)?.trim() === "Application"
-        );
-
-        if (appIndex === -1) return;
-
-        const appRow = taskRows[appIndex];
-        const typeCell = appRow.querySelector("td:nth-child(3) select");
-
-        if (typeCell && typeCell.value !== "Sequential") {
-          typeCell.value = "Sequential";
-          typeCell.dispatchEvent(new Event('change'));
-        }
-
-        if (eSigIndex !== -1 && appIndex !== eSigIndex + 1) {
-          const tbody = document.getElementById("taskTableBody");
-          tbody.removeChild(appRow);
-          const target = taskRows[eSigIndex + 1]?.nextSibling || null;
-          tbody.insertBefore(appRow, target);
-        }
-
-        updateTaskNumbers();
-      }
-
-      editToggle.addEventListener("click", () => {
-        isEditing = !isEditing;
-        editToggle.textContent = isEditing ? "Save" : "Edit";
-        rebuildTableFromDOM();
+  
+        previousType = type;
       });
-
-      applyWorkflowBtn.addEventListener("change", () => {
-        const selected = applyWorkflowBtn.value;
-        if (workflowTemplates[selected]) {
-          taskTableBody.innerHTML = "";
-          workflowTemplates[selected].forEach(addTask);
-          applyWorkflowBtn.selectedIndex = 0;
+    }
+  
+    function toggleEditMode() {
+      isEditing = !isEditing;
+      editToggleBtn.textContent = isEditing ? "Save" : "Edit";
+  
+      Array.from(taskTableBody.querySelectorAll("tr")).forEach(row => {
+        const nameCell = row.querySelector("td:nth-child(4)");
+        const currentName = nameCell.textContent.trim();
+        nameCell.innerHTML = "";
+  
+        if (isEditing) {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.value = currentName;
+          nameCell.appendChild(input);
+        } else {
+          const anchor = document.createElement("a");
+          anchor.href = "#";
+          anchor.textContent = nameCell.querySelector("input").value;
+          anchor.addEventListener("click", (e) => {
+            e.preventDefault();
+            openTaskModal(row);
+          });
+          nameCell.appendChild(anchor);
         }
       });
-
-      downloadBtn.addEventListener("click", () => {
-        const data = localStorage.getItem("taskManagerData");
-        const blob = new Blob([data], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = "tasks.json";
-        a.click();
-        URL.revokeObjectURL(url);
+  
+      saveToLocalStorage();
+    }
+  
+    function saveToLocalStorage() {
+      const tasks = Array.from(taskTableBody.querySelectorAll("tr")).map(row => ({
+        creationSequence: row.querySelector("td:nth-child(2) input").value,
+        type: row.querySelector("td:nth-child(3) select").value,
+        name: isEditing
+          ? row.querySelector("td:nth-child(4) input").value
+          : row.querySelector("td:nth-child(4) a").textContent,
+        description: row.querySelector("td:nth-child(5) input").value,
+      }));
+      localStorage.setItem("taskManagerData", JSON.stringify(tasks));
+    }
+  
+    function loadFromLocalStorage() {
+      const data = JSON.parse(localStorage.getItem("taskManagerData") || "[]");
+      data.forEach(addTask);
+      enforceApplicationAfterESignature();
+    }
+  
+    function enforceApplicationAfterESignature() {
+      const taskRows = Array.from(taskTableBody.querySelectorAll("tr"));
+  
+      let eSigRow = null;
+      let appRow = null;
+  
+      taskRows.forEach(row => {
+        const nameCell = row.querySelector("td:nth-child(4)");
+        const name = nameCell.querySelector("input")?.value?.trim() ||
+                     nameCell.querySelector("a")?.textContent?.trim() || "";
+  
+        if (name === "eSignature") {
+          eSigRow = row;
+        } else if (name === "Application") {
+          appRow = row;
+        }
       });
-
-      uploadInput.addEventListener("change", () => {
-        const file = uploadInput.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-          const tasks = JSON.parse(e.target.result);
-          taskTableBody.innerHTML = "";
-          tasks.forEach(addTask);
-        };
-        reader.readAsText(file);
-      });
-
-      function rebuildTableFromDOM() {
-        const tasks = Array.from(taskTableBody.children).map(row => ({
-          type: row.querySelector("select").value,
-          name: row.querySelector("input[type='text'], a").value || row.querySelector("a")?.textContent,
-          sequence: row.querySelector("td:nth-child(5) input").value,
-          notes: isEditing ? row.querySelector("textarea").value : row.querySelector("span").textContent
-        }));
-
+  
+      if (!appRow) return;
+  
+      const typeSelect = appRow.querySelector("select");
+      if (typeSelect.value !== "Sequential") {
+        typeSelect.value = "Sequential";
+        typeSelect.dispatchEvent(new Event("change"));
+      }
+  
+      if (eSigRow && eSigRow !== appRow.previousElementSibling) {
+        const nextSibling = eSigRow.nextSibling;
+        taskTableBody.removeChild(appRow);
+        taskTableBody.insertBefore(appRow, nextSibling);
+      }
+  
+      updateTaskNumbers();
+    }
+  
+    function openTaskModal(row) {
+      alert("Modal for task: " + (isEditing
+        ? row.querySelector("td:nth-child(4) input").value
+        : row.querySelector("td:nth-child(4) a").textContent));
+    }
+  
+    editToggleBtn.addEventListener("click", toggleEditMode);
+    downloadBtn.addEventListener("click", () => {
+      const data = localStorage.getItem("taskManagerData");
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "tasks.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  
+    uploadInput.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const tasks = JSON.parse(reader.result);
         taskTableBody.innerHTML = "";
         tasks.forEach(addTask);
-      }
-
-      loadFromLocalStorage();
-
-      // Make table sortable
-      new Sortable(taskTableBody, {
-        handle: ".handle",
-        animation: 150,
-        onEnd: () => {
-          enforceApplicationAfterESignature();
-          updateTaskNumbers();
-          saveToLocalStorage();
-        }
-      });
+        enforceApplicationAfterESignature();
+      };
+      reader.readAsText(file);
     });
+  
+    applyWorkflowBtn.addEventListener("change", () => {
+      const selected = applyWorkflowBtn.value;
+      applyWorkflowBtn.value = "";
+      if (selected === "Risk Policy Opening") {
+        addTask({ name: "Open Case", type: "Independent" });
+        addTask({ name: "eSignature", type: "Sequential" });
+        addTask({ name: "Application", type: "Sequential" });
+        addTask({ name: "Underwriting", type: "Parallel" });
+      } else if (selected === "Wealth Account Opening") {
+        addTask({ name: "Open Case", type: "Independent" });
+        addTask({ name: "eSignature", type: "Sequential" });
+        addTask({ name: "Application", type: "Sequential" });
+        addTask({ name: "Delivery", type: "Parallel" });
+      }
+      enforceApplicationAfterESignature();
+    });
+  
+    new Sortable(taskTableBody, {
+      animation: 150,
+      onEnd: () => {
+        enforceApplicationAfterESignature();
+        updateTaskNumbers();
+        saveToLocalStorage();
+      },
+    });
+  
+    loadFromLocalStorage();
   </script>
+  
 
 </body>
 
