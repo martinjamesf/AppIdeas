@@ -181,6 +181,15 @@
       document.getElementById('editToggle').textContent = editMode ? 'Save' : 'Edit';
       renderTasks();
     }
+    // Automatically place "Application" after "eSignature" and set to Sequential
+    let appIndex = tasks.findIndex(t => t.name === "Application");
+    let sigIndex = tasks.findIndex(t => t.name === "eSignature");
+
+    if (appIndex !== -1 && sigIndex !== -1 && appIndex !== sigIndex + 1) {
+      const [applicationTask] = tasks.splice(appIndex, 1);
+      applicationTask.type = "Sequential";
+      tasks.splice(sigIndex + 1, 0, applicationTask);
+    }
 
     function updateTaskNumbers() {
       let num = 1;
