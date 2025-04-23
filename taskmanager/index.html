@@ -160,6 +160,13 @@
       font-size: 1rem;
       box-sizing: border-box;
     }
+
+    .status-text,
+    .group-text {
+      display: inline-block;
+      padding: 0.4em 0.6em;
+      font-size: 0.9rem;
+    }
   </style>
 </head>
 
@@ -299,30 +306,39 @@
       ]
     };
 
-    function createTaskRow(taskName = "", status = "Not Started", group = "Independent", seq = "") {
-      const row = document.createElement('tr');
+    function createTaskRow(task = {}) {
+      const {
+        name = '',
+        status = 'Not Started',
+        group = 'Independent',
+        creationSequence = ''
+      } = task;
 
+      const row = document.createElement('tr');
       row.innerHTML = `
         <td><input type="checkbox" class="select-row" /></td>
         <td class="drag-handle">☰</td>
         <td class="task-number"></td>
-        <td class="task-name-cell">${editMode ? `<input type="text" value="${taskName}" />` : `<span class="task-link">${taskName}</span>`}</td>
-        <td>
-          <select ${!editMode ? 'disabled' : ''}>
-            ${statusOptions.map(opt => `<option value="${opt}" ${opt === status ? "selected" : ""}>${opt}</option>`).join('')}
-          </select>
+        <td class="task-name-cell">
+          ${editMode ? `<input type="text" value="${name}" class="task-name-input" />` : `<a href="#" class="open-modal">${name}</a>`}
         </td>
-        <td>
-          <select ${!editMode ? 'disabled' : ''}>
-            ${groupOptions.map(opt => `<option value="${opt}" ${opt === group ? "selected" : ""}>${opt}</option>`).join('')}
-          </select>
+        <td class="status-cell">
+          ${editMode
+          ? `<select class="status-select">${statusOptions.map(opt => `<option value="${opt}" ${opt === status ? 'selected' : ''}>${opt}</option>`).join('')}</select>`
+          : `<span class="status-text">${status}</span>`}
         </td>
-        <td><input type="text" value="${seq}" ${!editMode ? 'readonly' : ''}></td>
+        <td class="group-cell">
+          ${editMode
+          ? `<select class="group-select">${groupOptions.map(opt => `<option value="${opt}" ${opt === group ? 'selected' : ''}>${opt}</option>`).join('')}</select>`
+          : `<span class="group-text">${group}</span>`}
+        </td>
+        <td class="sequence-cell">
+          <input type="text" value="${creationSequence}" class="sequence-input" ${!editMode ? 'readonly' : ''} />
+        </td>
       `;
-
-      taskTable.appendChild(row);
-      updateNumbering();
+      taskTableBody.appendChild(row);
     }
+
 
     function updateNumbering() {
       const rows = [...taskTable.querySelectorAll('tr')];
