@@ -1,263 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Task Manager - Organize your tasks</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.5.10/css/pico.min.css" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 2rem;
-      background: #f9f9f9;
-    }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .actions button,
-    .actions select {
-      padding: 0.5rem 1rem;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .actions select {
-      background: #eee;
-      color: black;
-    }
-
-    .bulk-actions {
-      display: none;
-      margin-bottom: 1rem;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .bulk-actions.active {
-      display: flex;
-    }
-
-    table {
+    td input, td select {
       width: 100%;
-      border-collapse: collapse;
-      background: white;
     }
-
-    th,
-    td {
-      padding: 0.5rem;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-      vertical-align: middle;
-    }
-
-    th {
-      background: #f0f0f0;
-    }
-
-    .drag-handle {
-      cursor: move;
-      color: #666;
-      padding: 0 0.5rem;
-    }
-
-    td input,
-    td select {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 0.4rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    td input[type="text"] {
-      font-size: 1rem;
-    }
-
-    th:first-child,
     td:first-child {
-      width: 2rem;
-      text-align: center;
-      vertical-align: middle;
-    }
-
-    input[type="checkbox"] {
-      vertical-align: middle;
-      width: 1rem;
-      height: 1rem;
-      accent-color: #007BFF;
-      /* Matches your theme */
-    }
-
-    .task-link {
-      color: #007BFF;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-
-    .modal {
-      position: fixed;
-      top: 10%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: white;
-      padding: 1.5rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
-      z-index: 1000;
-      display: none;
-      width: 400px;
-    }
-
-    .modal.active {
-      display: block;
-    }
-
-    .modal h3 {
-      margin-top: 0;
-    }
-
-    .modal input {
-      margin-top: 0.5rem;
-      width: 100%;
-    }
-
-    .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 999;
-      display: none;
-    }
-
-    .overlay.active {
-      display: block;
-    }
-
-    .modal label {
-      display: block;
-      margin-top: 0.8rem;
       font-weight: bold;
     }
-
-    .modal input,
-    .modal select,
-    .modal textarea {
-      margin-top: 0.3rem;
-      width: 100%;
-      padding: 0.4rem;
-      font-size: 1rem;
-      box-sizing: border-box;
+    a {
+      cursor: pointer;
+      color: var(--primary);
+    }
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
-
 <body>
+  <main class="container">
+    <h1>Task Manager</h1>
 
-  <div class="actions">
-    <button id="addTask">Add Task</button>
-    <select id="applyWorkflow">
-      <option value="">Apply Workflow</option>
-      <option value="risk">Risk Policy Opening</option>
-      <option value="fourk">401(k) Rollover</option>
-      <option value="wealth">Wealth Account Opening</option>
-    </select>
-    <button id="toggleEdit">Edit</button>
-  </div>
+    <div class="grid">
+      <button id="toggleEdit">Edit</button>
+      <select id="applyWorkflow">
+        <option value="">Apply Workflow</option>
+        <option value="Risk Policy Opening">Risk Policy Opening</option>
+        <option value="Wealth Account Opening">Wealth Account Opening</option>
+      </select>
+      <button id="downloadBtn">Download JSON</button>
+      <input type="file" id="uploadInput" accept=".json" />
+    </div>
 
-  <div class="bulk-actions" id="bulkActions">
-    <select id="bulkGroup">
-      <option value="">Group by</option>
-      <option value="Independent">Independent</option>
-      <option value="Sequential">Sequential</option>
-      <option value="Parallel">Parallel</option>
-    </select>
-
-    <select id="bulkStatus">
-      <option value="">Status</option>
-      <option value="Not Started">Not Started</option>
-      <option value="In Progress">In Progress</option>
-      <option value="Completed">Completed</option>
-      <option value="Waiting on Someone">Waiting on Someone</option>
-    </select>
-
-    <button id="bulkDelete">Delete</button>
-  </div>
-
-  <table id="taskTable">
-    <thead>
-      <tr>
-        <th><input type="checkbox" id="selectAll" /></th>
-        <th></th>
-        <th>#</th>
-        <th>Task Name</th>
-        <th>Status</th>
-        <th>Group</th>
-        <th>Task Creation Sequence</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <div class="overlay" id="modalOverlay"></div>
-  <div class="modal" id="taskModal">
-    <h3>Edit Task</h3>
-    <label>Client/Business Name</label>
-    <input id="modalClientName" type="text" />
-
-    <label>Task Name</label>
-    <input id="modalTaskName" type="text" />
-
-    <label>Assigned To</label>
-    <select id="modalAssignedTo">
-      <option value="">Select</option>
-      <option>James</option>
-      <option>Josie</option>
-      <option>Michael</option>
-      <option>Neha</option>
-      <option>Catelyn</option>
-    </select>
-
-    <label>Status</label>
-    <select id="modalStatus">
-      <option>Not Started</option>
-      <option>In Progress</option>
-      <option>Completed</option>
-      <option>Waiting on Someone</option>
-    </select>
-
-    <label>Start Date</label>
-    <input id="modalStartDate" type="date" />
-
-    <label>Due Date</label>
-    <input id="modalDueDate" type="date" />
-
-    <label>Sub-type</label>
-    <input id="modalSubtype" type="text" />
-
-    <label>Priority</label>
-    <select id="modalPriority">
-      <option>Low</option>
-      <option>Medium</option>
-      <option>High</option>
-    </select>
-
-    <label>Comments</label>
-    <textarea id="modalComments" rows="3"></textarea>
-
-    <button onclick="closeModal()">Close</button>
-  </div>
-
+    <table id="taskTable" role="grid">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Task Creation Sequence</th>
+          <th>Type</th>
+          <th>Task Name</th>
+          <th>Description</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Tasks will be dynamically added here -->
+      </tbody>
+    </table>
+  </main>
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
@@ -265,8 +59,17 @@
     const taskTableBody = taskTable.querySelector("tbody");
     const editToggleBtn = document.getElementById("toggleEdit");
     const applyWorkflowBtn = document.getElementById("applyWorkflow");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const uploadInput = document.getElementById("uploadInput");
 
     let isEditing = false;
+
+    function attachNameLinkListener(anchor, row) {
+      anchor.addEventListener("click", (e) => {
+        e.preventDefault();
+        openTaskModal(row);
+      });
+    }
 
     function createTaskRow(task = {}) {
       const row = document.createElement("tr");
@@ -298,10 +101,7 @@
       const nameLink = document.createElement("a");
       nameLink.href = "#";
       nameLink.textContent = task.name || "";
-      nameLink.addEventListener("click", (e) => {
-        e.preventDefault();
-        openTaskModal(row);
-      });
+      attachNameLinkListener(nameLink, row);
       nameCell.appendChild(isEditing ? nameInput : nameLink);
 
       const descCell = document.createElement("td");
@@ -384,14 +184,8 @@
           const anchor = document.createElement("a");
           anchor.href = "#";
           anchor.textContent = nameCell.querySelector("input").value;
-
-          anchor.addEventListener("click", (e) => {
-            e.preventDefault();
-            openTaskModal(row);
-          });
-
+          attachNameLinkListener(anchor, row);
           nameCell.appendChild(anchor);
-
         }
       });
 
@@ -458,6 +252,7 @@
     }
 
     editToggleBtn.addEventListener("click", toggleEditMode);
+
     downloadBtn.addEventListener("click", () => {
       const data = localStorage.getItem("taskManagerData");
       const blob = new Blob([data], { type: "application/json" });
@@ -510,8 +305,5 @@
 
     loadFromLocalStorage();
   </script>
-
-
 </body>
-
 </html>
