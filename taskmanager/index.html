@@ -144,6 +144,22 @@
     .overlay.active {
       display: block;
     }
+
+    .modal label {
+      display: block;
+      margin-top: 0.8rem;
+      font-weight: bold;
+    }
+
+    .modal input,
+    .modal select,
+    .modal textarea {
+      margin-top: 0.3rem;
+      width: 100%;
+      padding: 0.4rem;
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
   </style>
 </head>
 
@@ -197,9 +213,52 @@
   <div class="overlay" id="modalOverlay"></div>
   <div class="modal" id="taskModal">
     <h3>Edit Task</h3>
+    <label>Client/Business Name</label>
+    <input id="modalClientName" type="text" />
+
+    <label>Task Name</label>
     <input id="modalTaskName" type="text" />
+
+    <label>Assigned To</label>
+    <select id="modalAssignedTo">
+      <option value="">Select</option>
+      <option>James</option>
+      <option>Josie</option>
+      <option>Michael</option>
+      <option>Neha</option>
+      <option>Catelyn</option>
+    </select>
+
+    <label>Status</label>
+    <select id="modalStatus">
+      <option>Not Started</option>
+      <option>In Progress</option>
+      <option>Completed</option>
+      <option>Waiting on Someone</option>
+    </select>
+
+    <label>Start Date</label>
+    <input id="modalStartDate" type="date" />
+
+    <label>Due Date</label>
+    <input id="modalDueDate" type="date" />
+
+    <label>Sub-type</label>
+    <input id="modalSubtype" type="text" />
+
+    <label>Priority</label>
+    <select id="modalPriority">
+      <option>Low</option>
+      <option>Medium</option>
+      <option>High</option>
+    </select>
+
+    <label>Comments</label>
+    <textarea id="modalComments" rows="3"></textarea>
+
     <button onclick="closeModal()">Close</button>
   </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
@@ -319,19 +378,45 @@
 
     function showModal(row) {
       currentModalRow = row;
+
+      document.getElementById('modalClientName').value = row.dataset.clientName || "";
       document.getElementById('modalTaskName').value = row.querySelector('.task-link').textContent;
+      document.getElementById('modalAssignedTo').value = row.dataset.assignedTo || "";
+      document.getElementById('modalStatus').value = row.cells[4].querySelector('select').value;
+      document.getElementById('modalStartDate').value = row.dataset.startDate || "";
+      document.getElementById('modalDueDate').value = row.dataset.dueDate || "";
+      document.getElementById('modalSubtype').value = row.dataset.subtype || "";
+      document.getElementById('modalPriority').value = row.dataset.priority || "Medium";
+      document.getElementById('modalComments').value = row.dataset.comments || "";
+
       document.getElementById('modalOverlay').classList.add('active');
       document.getElementById('taskModal').classList.add('active');
     }
 
     function closeModal() {
       if (currentModalRow) {
-        currentModalRow.querySelector('.task-link').textContent = document.getElementById('modalTaskName').value;
+        const taskName = document.getElementById('modalTaskName').value;
+        const status = document.getElementById('modalStatus').value;
+        const priority = document.getElementById('modalPriority').value;
+
+        currentModalRow.querySelector('.task-link').textContent = taskName;
+        currentModalRow.cells[4].querySelector('select').value = status;
+
+        // Store extra fields in dataset
+        currentModalRow.dataset.clientName = document.getElementById('modalClientName').value;
+        currentModalRow.dataset.assignedTo = document.getElementById('modalAssignedTo').value;
+        currentModalRow.dataset.startDate = document.getElementById('modalStartDate').value;
+        currentModalRow.dataset.dueDate = document.getElementById('modalDueDate').value;
+        currentModalRow.dataset.subtype = document.getElementById('modalSubtype').value;
+        currentModalRow.dataset.priority = priority;
+        currentModalRow.dataset.comments = document.getElementById('modalComments').value;
       }
+
       document.getElementById('modalOverlay').classList.remove('active');
       document.getElementById('taskModal').classList.remove('active');
       currentModalRow = null;
     }
+
 
     document.addEventListener('click', e => {
       if (e.target.classList.contains('task-link')) {
