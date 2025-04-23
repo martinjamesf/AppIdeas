@@ -1,303 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
   <title>Task Manager</title>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 2rem;
-      background: #f9f9f9;
+      padding: 2rem;
+      background: #f4f4f4;
     }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .actions button,
-    .actions select {
-      padding: 0.5rem 1rem;
-      background: #007BFF;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
       background: white;
     }
-
-    th,
-    td {
-      padding: 0.5rem;
-      text-align: left;
-      border-bottom: 1px solid #ddd;
-    }
-
-    th {
-      background: #f0f0f0;
-    }
-
-    .drag-handle {
-      cursor: move;
-      color: #666;
-      padding: 0 0.5rem;
-    }
-
-    td input,
-    td select {
-      padding: 0.4rem;
+    th, td {
+      padding: 0.75rem;
       border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1rem;
+      text-align: left;
     }
-
-    th:first-child,
-    td:first-child {
-      width: 40px;
-      text-align: center;
-      vertical-align: middle;
+    th {
+      background-color: #007bff;
+      color: white;
     }
-
-    th:first-child input,
-    td:first-child input {
-      margin: 0;
-      transform: translateY(2px);
+    .toolbar {
+      margin-bottom: 1rem;
     }
-
-    .task-link {
-      color: #007BFF;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-
     .modal {
+      display: none;
       position: fixed;
-      top: 10%;
       left: 50%;
-      transform: translateX(-50%);
+      top: 50%;
+      transform: translate(-50%, -50%);
       background: white;
       padding: 1.5rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 0 10px rgba(0,0,0,0.25);
       z-index: 1000;
-      display: none;
-      width: 400px;
     }
-
-    .modal.active {
+    .modal.show {
       display: block;
     }
-
     .overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.3);
-      z-index: 999;
       display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
     }
-
-    .overlay.active {
+    .overlay.show {
       display: block;
     }
-
-    .modal label {
-      display: block;
-      margin-top: 0.8rem;
-      font-weight: bold;
+    .button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      margin-right: 0.5rem;
+      cursor: pointer;
+      border-radius: 4px;
     }
-
-    .modal input,
-    .modal select,
-    .modal textarea {
-      margin-top: 0.3rem;
+    .button:hover {
+      background-color: #0056b3;
+    }
+    input[type="text"], select {
       width: 100%;
-      padding: 0.4rem;
-      font-size: 1rem;
-    }
-
-    select {
-      -webkit-appearance: none !important;
-      -moz-appearance: none !important;
-
+      padding: 0.5rem;
+      margin-top: 0.25rem;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
-
 <body>
 
-  <div class="actions">
-    <button id="addTask">Add Task</button>
-    <select id="applyWorkflow">
-      <option value="">Apply Workflow</option>
-      <option value="risk">Risk Policy Opening</option>
-      <option value="fourk">401(k) Rollover</option>
-      <option value="wealth">Wealth Account Opening</option>
-    </select>
-    <button id="saveChangesBtn" class="contrast">Save Changes</button>
-  </div>
+<div class="toolbar">
+  <button class="button" onclick="addTask()">Add Task</button>
+  <button class="button" onclick="saveData()">Save</button>
+</div>
 
-  <table id="taskTable">
-    <thead>
-      <tr>
-        <th><input type="checkbox" id="selectAll" /></th>
-        <th></th>
-        <th>#</th>
-        <th>Task Name</th>
-        <th>Group</th>
-        <th>Task Creation Sequence</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<table id="taskTable">
+  <thead>
+    <tr>
+      <th><input type="checkbox" id="selectAll" onchange="toggleAll(this)"></th>
+      <th>Task Name</th>
+      <th>Type</th>
+      <th>Task Creation Sequence</th>
+    </tr>
+  </thead>
+  <tbody id="taskTbody">
+    <!-- Task rows go here -->
+  </tbody>
+</table>
 
-  <div class="overlay" id="modalOverlay"></div>
-  <div class="modal" id="taskModal">
-    <h3>Edit Task</h3>
-    <label>Client/Business Name</label>
-    <input id="modalClientName" type="text" />
-    <label>Task Name</label>
-    <input id="modalTaskName" type="text" />
-    <label>Assigned To</label>
-    <select id="modalAssignedTo">
-      <option value="">Select</option>
-      <option>James</option>
-      <option>Josie</option>
-      <option>Michael</option>
-      <option>Neha</option>
-      <option>Catelyn</option>
-    </select>
-    <label>Status</label>
-    <select id="modalStatus">
-      <option>Not Started</option>
-      <option>In Progress</option>
-      <option>Completed</option>
-      <option>Waiting on Someone</option>
-    </select>
-    <label>Start Date</label>
-    <input id="modalStartDate" type="date" />
-    <label>Due Date</label>
-    <input id="modalDueDate" type="date" />
-    <label>Sub-type</label>
-    <input id="modalSubtype" type="text" />
-    <label>Priority</label>
-    <select id="modalPriority">
-      <option>Low</option>
-      <option>Medium</option>
-      <option>High</option>
-    </select>
-    <label>Comments</label>
-    <textarea id="modalComments" rows="3"></textarea>
-    <button onclick="closeModal()">Close</button>
-  </div>
+<div class="overlay" id="modalOverlay"></div>
+<div class="modal" id="taskModal">
+  <h3>Edit Task</h3>
+  <label for="taskName">Task Name</label>
+  <input type="text" id="taskName">
+  <label for="taskType">Type</label>
+  <select id="taskType">
+    <option value="Independent">Independent</option>
+    <option value="Sequential">Sequential</option>
+    <option value="Parallel">Parallel</option>
+  </select>
+  <label for="taskSequence">Task Creation Sequence</label>
+  <input type="text" id="taskSequence">
+  <input type="hidden" id="modalRowIndex">
+  <button class="button" onclick="saveModal()">Save Task</button>
+  <button class="button" onclick="closeModal()">Cancel</button>
+</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-  <script>
-    const taskTable = document.querySelector('#taskTable tbody');
-    const statusOptions = ["Not Started", "In Progress", "Completed", "Waiting on Someone"];
-    const groupOptions = ["Independent", "Sequential", "Parallel"];
-    let currentModalRow = null;
+<script>
+  const tbody = document.getElementById('taskTbody');
 
-    const workflows = {
-      risk: ["Gather client information", "Send client online medical", "Complete Application", "Send to client for eSign", "Submit to underwriting", "Delivery policy"],
-      fourk: ["Gather statements", "Generate paperwork and send TAF", "Rollover call", "Fund account", "Trade assests", "Post account check-in"],
-      wealth: ["Collect financial goals", "Analyze risk profile", "Propose investment plan", "Client approval and sign-off", "Account creation", "Initial fund transfer"]
-    };
+  function addTask() {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><input type="checkbox" class="rowCheckbox"></td>
+      <td contenteditable="true" data-field="name">New Task</td>
+      <td contenteditable="true" data-field="type">Independent</td>
+      <td contenteditable="true" data-field="sequence">1</td>
+    `;
+    row.addEventListener('dblclick', () => openModal(row));
+    tbody.appendChild(row);
+  }
 
-    function createTaskRow(taskName = "", group = "Independent", seq = "") {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td><input type="checkbox" class="select-row" /></td>
-        <td class="drag-handle">☰</td>
-        <td class="task-number"></td>
-        <td><input type="text" class="task-name-input" value="${taskName}"></td>
-        <td>
-          <select class="group-select">
-            ${groupOptions.map(opt => `<option ${opt === group ? "selected" : ""}>${opt}</option>`).join('')}
-          </select>
-        </td>
-        <td><input type="text" value="${seq}" /></td>
-      `;
-      row.querySelector('.task-name-input').addEventListener('dblclick', () => showModal(row));
-      taskTable.appendChild(row);
-      updateNumbering();
-    }
+  function toggleAll(source) {
+    const checkboxes = document.querySelectorAll('.rowCheckbox');
+    checkboxes.forEach(cb => cb.checked = source.checked);
+  }
 
-    function updateNumbering() {
-      const rows = [...taskTable.querySelectorAll('tr')];
-      let groupIndex = 0, subIndex = 1, prevGroup = "";
+  function openModal(row) {
+    document.getElementById('taskName').value = row.querySelector('[data-field="name"]').textContent.trim();
+    document.getElementById('taskType').value = row.querySelector('[data-field="type"]').textContent.trim();
+    document.getElementById('taskSequence').value = row.querySelector('[data-field="sequence"]').textContent.trim();
+    document.getElementById('modalRowIndex').value = [...tbody.children].indexOf(row);
+    document.getElementById('taskModal').classList.add('show');
+    document.getElementById('modalOverlay').classList.add('show');
+  }
 
-      rows.forEach(row => {
-        const group = row.querySelector('.group-select').value;
-        const numberCell = row.querySelector('.task-number');
-        if (group === "Sequential") {
-          if (prevGroup !== "Sequential") {
-            groupIndex++; subIndex = 1;
-          }
-          numberCell.textContent = `${groupIndex}.${subIndex++}`;
-        } else if (group === "Parallel") {
-          if (prevGroup !== "Parallel") groupIndex++;
-          numberCell.textContent = `${groupIndex}`;
-        } else {
-          groupIndex++;
-          numberCell.textContent = `${groupIndex}`;
-        }
-        prevGroup = group;
+  function closeModal() {
+    document.getElementById('taskModal').classList.remove('show');
+    document.getElementById('modalOverlay').classList.remove('show');
+  }
+
+  function saveModal() {
+    const index = parseInt(document.getElementById('modalRowIndex').value);
+    const row = tbody.children[index];
+    row.querySelector('[data-field="name"]').textContent = document.getElementById('taskName').value;
+    row.querySelector('[data-field="type"]').textContent = document.getElementById('taskType').value;
+    row.querySelector('[data-field="sequence"]').textContent = document.getElementById('taskSequence').value;
+    closeModal();
+  }
+
+  function saveData() {
+    const data = [];
+    [...tbody.children].forEach(row => {
+      data.push({
+        name: row.querySelector('[data-field="name"]').textContent.trim(),
+        type: row.querySelector('[data-field="type"]').textContent.trim(),
+        sequence: row.querySelector('[data-field="sequence"]').textContent.trim(),
       });
-    }
-
-    document.getElementById('addTask').onclick = () => createTaskRow();
-
-    document.getElementById('applyWorkflow').onchange = (e) => {
-      const tasks = workflows[e.target.value];
-      if (tasks) tasks.forEach(name => createTaskRow(name));
-      e.target.value = "";
-    };
-
-    document.getElementById("saveChangesBtn").addEventListener("click", () => {
-      const taskData = getTaskDataFromTable(); // already defined
-      localStorage.setItem("taskData", JSON.stringify(taskData));
-      alert("Changes saved successfully!");
-
-      // 💡 Later: Add your "Applications" or "eSignature" integration logic here
     });
-    
-    function showModal(row) {
-      currentModalRow = row;
-      const taskName = row.querySelector('.task-name-input').value;
-      const status = "Not Started"; // Default or saved value
-      document.getElementById('modalTaskName').value = taskName;
-      document.getElementById('modalStatus').value = status;
-      document.getElementById('modalOverlay').classList.add('active');
-      document.getElementById('taskModal').classList.add('active');
-    }
+    console.log('Saving Data:', JSON.stringify(data, null, 2));
+    // Add your application or eSignature logic here
+  }
 
-    function closeModal() {
-      if (!currentModalRow) return;
-      const updatedName = document.getElementById('modalTaskName').value;
-      currentModalRow.querySelector('.task-name-input').value = updatedName;
-      document.getElementById('modalOverlay').classList.remove('active');
-      document.getElementById('taskModal').classList.remove('active');
-    }
+  new Sortable(tbody, {
+    animation: 150,
+    handle: 'td',
+  });
+</script>
 
-    new Sortable(taskTable, {
-      handle: '.drag-handle',
-      animation: 150,
-      onEnd: updateNumbering
-    });
-
-    taskTable.addEventListener('change', updateNumbering);
-  </script>
 </body>
-
 </html>
