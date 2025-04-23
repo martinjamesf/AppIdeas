@@ -299,30 +299,35 @@
       ]
     };
 
-    function createTaskRow(taskName = "", status = "Not Started", group = "Independent", seq = "") {
+    function createTaskRow(taskName = "", status = "Not Started", group = "Independent") {
       const row = document.createElement('tr');
 
       row.innerHTML = `
-        <td><input type="checkbox" class="select-row" /></td>
-        <td class="drag-handle">☰</td>
-        <td class="task-number"></td>
-        <td class="task-name-cell">${editMode ? `<input type="text" value="${taskName}" />` : `<span class="task-link">${taskName}</span>`}</td>
-        <td>
-          <select ${!editMode ? 'disabled' : ''}>
-            ${statusOptions.map(opt => `<option value="${opt}" ${opt === status ? "selected" : ""}>${opt}</option>`).join('')}
-          </select>
-        </td>
-        <td>
-          <select ${!editMode ? 'disabled' : ''}>
-            ${groupOptions.map(opt => `<option value="${opt}" ${opt === group ? "selected" : ""}>${opt}</option>`).join('')}
-          </select>
-        </td>
-        <td><input type="text" value="${seq}" ${!editMode ? 'readonly' : ''}></td>
-      `;
+    <td><input type="checkbox" class="select-row" /></td>
+    <td class="drag-handle">☰</td>
+    <td class="task-number"></td>
+    <td class="task-name-cell">${editMode ? `<input type="text" value="${taskName}" />` : `<span class="task-link">${taskName}</span>`}</td>
+    <td>
+      ${editMode ? `
+        <select>
+          ${statusOptions.map(opt => `<option value="${opt}" ${opt === status ? "selected" : ""}>${opt}</option>`).join('')}
+        </select>
+      ` : `<span class="status-text">${status}</span>`}
+    </td>
+    <td>
+      ${editMode ? `
+        <select>
+          ${groupOptions.map(opt => `<option value="${opt}" ${opt === group ? "selected" : ""}>${opt}</option>`).join('')}
+        </select>
+      ` : `<span class="group-text">${group}</span>`}
+    </td>
+    <td><input type="text" value="" ${!editMode ? 'readonly' : ''}></td>
+  `;
 
       taskTable.appendChild(row);
       updateNumbering();
     }
+
 
     function updateNumbering() {
       const rows = [...taskTable.querySelectorAll('tr')];
