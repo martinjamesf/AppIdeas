@@ -145,6 +145,7 @@
       <option value="fourk">401(k) Rollover</option>
       <option value="wealth">Wealth Account Opening</option>
     </select>
+    <button id="saveChangesBtn" class="contrast">Save Changes</button>
   </div>
 
   <table id="taskTable">
@@ -264,6 +265,14 @@
       e.target.value = "";
     };
 
+    document.getElementById("saveChangesBtn").addEventListener("click", () => {
+      const taskData = getTaskDataFromTable(); // already defined
+      localStorage.setItem("taskData", JSON.stringify(taskData));
+      alert("Changes saved successfully!");
+
+      // 💡 Later: Add your "Applications" or "eSignature" integration logic here
+    });
+    
     function showModal(row) {
       currentModalRow = row;
       const taskName = row.querySelector('.task-name-input').value;
