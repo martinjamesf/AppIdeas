@@ -1,309 +1,468 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Task Manager</title>
-  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.5.10/css/pico.min.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Manager - Organize your tasks</title>
   <style>
-    td input, td select {
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .actions button,
+    .actions select {
+      padding: 0.5rem 1rem;
+      background: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .actions select {
+      background: #eee;
+      color: black;
+    }
+
+    .bulk-actions {
+      display: none;
+      margin-bottom: 1rem;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .bulk-actions.active {
+      display: flex;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th,
+    td {
+      padding: 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      vertical-align: middle;
+    }
+
+    th {
+      background: #f0f0f0;
+    }
+
+    .drag-handle {
+      cursor: move;
+      color: #666;
+      padding: 0 0.5rem;
+    }
+
+    td input,
+    td select {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 0.4rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    td input[type="text"] {
+      font-size: 1rem;
+    }
+
+    th:first-child,
+    td:first-child {
+      width: 2rem;
+      text-align: center;
+      vertical-align: middle;
+    }
+
+    input[type="checkbox"] {
+      vertical-align: middle;
+      width: 1rem;
+      height: 1rem;
+      accent-color: #007BFF;
+      /* Matches your theme */
+    }
+
+    .task-link {
+      color: #007BFF;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .modal {
+      position: fixed;
+      top: 10%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      display: none;
+      width: 400px;
+    }
+
+    .modal.active {
+      display: block;
+    }
+
+    .modal h3 {
+      margin-top: 0;
+    }
+
+    .modal input {
+      margin-top: 0.5rem;
       width: 100%;
     }
-    td:first-child {
+
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      z-index: 999;
+      display: none;
+    }
+
+    .overlay.active {
+      display: block;
+    }
+
+    .modal label {
+      display: block;
+      margin-top: 0.8rem;
       font-weight: bold;
     }
-    a {
-      cursor: pointer;
-      color: var(--primary);
-    }
-    a:hover {
-      text-decoration: underline;
+
+    .modal input,
+    .modal select,
+    .modal textarea {
+      margin-top: 0.3rem;
+      width: 100%;
+      padding: 0.4rem;
+      font-size: 1rem;
+      box-sizing: border-box;
     }
   </style>
 </head>
+
 <body>
-  <main class="container">
-    <h1>Task Manager</h1>
 
-    <div class="grid">
-      <button id="toggleEdit">Edit</button>
-      <select id="applyWorkflow">
-        <option value="">Apply Workflow</option>
-        <option value="Risk Policy Opening">Risk Policy Opening</option>
-        <option value="Wealth Account Opening">Wealth Account Opening</option>
-      </select>
-      <button id="downloadBtn">Download JSON</button>
-      <input type="file" id="uploadInput" accept=".json" />
-    </div>
+  <div class="actions">
+    <button id="addTask">Add Task</button>
+    <select id="applyWorkflow">
+      <option value="">Apply Workflow</option>
+      <option value="risk">Risk Policy Opening</option>
+      <option value="fourk">401(k) Rollover</option>
+      <option value="wealth">Wealth Account Opening</option>
+    </select>
+    <button id="toggleEdit">Edit</button>
+  </div>
 
-    <table id="taskTable" role="grid">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Task Creation Sequence</th>
-          <th>Type</th>
-          <th>Task Name</th>
-          <th>Description</th>
-          <th>Delete</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Tasks will be dynamically added here -->
-      </tbody>
-    </table>
-  </main>
+  <div class="bulk-actions" id="bulkActions">
+    <select id="bulkGroup">
+      <option value="">Group by</option>
+      <option value="Independent">Independent</option>
+      <option value="Sequential">Sequential</option>
+      <option value="Parallel">Parallel</option>
+    </select>
+
+    <select id="bulkStatus">
+      <option value="">Status</option>
+      <option value="Not Started">Not Started</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Completed">Completed</option>
+      <option value="Waiting on Someone">Waiting on Someone</option>
+    </select>
+
+    <button id="bulkDelete">Delete</button>
+  </div>
+
+  <table id="taskTable">
+    <thead>
+      <tr>
+        <th><input type="checkbox" id="selectAll" /></th>
+        <th></th>
+        <th>#</th>
+        <th>Task Name</th>
+        <th>Status</th>
+        <th>Group</th>
+        <th>Task Creation Sequence</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div class="overlay" id="modalOverlay"></div>
+  <div class="modal" id="taskModal">
+    <h3>Edit Task</h3>
+    <label>Client/Business Name</label>
+    <input id="modalClientName" type="text" />
+
+    <label>Task Name</label>
+    <input id="modalTaskName" type="text" />
+
+    <label>Assigned To</label>
+    <select id="modalAssignedTo">
+      <option value="">Select</option>
+      <option>James</option>
+      <option>Josie</option>
+      <option>Michael</option>
+      <option>Neha</option>
+      <option>Catelyn</option>
+    </select>
+
+    <label>Status</label>
+    <select id="modalStatus">
+      <option>Not Started</option>
+      <option>In Progress</option>
+      <option>Completed</option>
+      <option>Waiting on Someone</option>
+    </select>
+
+    <label>Start Date</label>
+    <input id="modalStartDate" type="date" />
+
+    <label>Due Date</label>
+    <input id="modalDueDate" type="date" />
+
+    <label>Sub-type</label>
+    <input id="modalSubtype" type="text" />
+
+    <label>Priority</label>
+    <select id="modalPriority">
+      <option>Low</option>
+      <option>Medium</option>
+      <option>High</option>
+    </select>
+
+    <label>Comments</label>
+    <textarea id="modalComments" rows="3"></textarea>
+
+    <button onclick="closeModal()">Close</button>
+  </div>
+
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
-    const taskTable = document.getElementById("taskTable");
-    const taskTableBody = taskTable.querySelector("tbody");
-    const editToggleBtn = document.getElementById("toggleEdit");
-    const applyWorkflowBtn = document.getElementById("applyWorkflow");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const uploadInput = document.getElementById("uploadInput");
+    document.addEventListener("DOMContentLoaded", () => {
+      const taskTableBody = document.getElementById("taskTableBody");
+      const editToggle = document.getElementById("editToggle");
+      const applyWorkflowBtn = document.getElementById("applyWorkflow");
+      const downloadBtn = document.getElementById("downloadBtn");
+      const uploadInput = document.getElementById("uploadInput");
 
-    let isEditing = false;
+      let isEditing = false;
 
-    function attachNameLinkListener(anchor, row) {
-      anchor.addEventListener("click", (e) => {
-        e.preventDefault();
-        openTaskModal(row);
-      });
-    }
+      const defaultTask = {
+        name: "New Task",
+        type: "Independent",
+        sequence: "",
+        notes: ""
+      };
 
-    function createTaskRow(task = {}) {
-      const row = document.createElement("tr");
+      const workflowTemplates = {
+        "Risk Policy Opening": [
+          { name: "eSignature", type: "Independent", sequence: "", notes: "" },
+          { name: "Application", type: "Sequential", sequence: "", notes: "" },
+          { name: "Verification", type: "Parallel", sequence: "", notes: "" }
+        ],
+        "Wealth Account Opening": [
+          { name: "eSignature", type: "Independent", sequence: "", notes: "" },
+          { name: "Application", type: "Sequential", sequence: "", notes: "" },
+          { name: "Funding", type: "Parallel", sequence: "", notes: "" }
+        ]
+      };
 
-      const idCell = document.createElement("td");
-      idCell.textContent = "";
+      function addTask(task = defaultTask) {
+        const row = document.createElement("tr");
 
-      const seqCell = document.createElement("td");
-      const seqInput = document.createElement("input");
-      seqInput.type = "text";
-      seqInput.value = task.creationSequence || "";
-      seqCell.appendChild(seqInput);
+        row.innerHTML = `
+          <td class="handle" style="cursor: grab;">☰</td>
+          <td class="task-number"></td>
+          <td><select ${!isEditing ? "disabled" : ""}>
+            <option value="Independent"${task.type === "Independent" ? " selected" : ""}>Independent</option>
+            <option value="Sequential"${task.type === "Sequential" ? " selected" : ""}>Sequential</option>
+            <option value="Parallel"${task.type === "Parallel" ? " selected" : ""}>Parallel</option>
+          </select></td>
+          <td>${isEditing ? `<input type="text" value="${task.name}">` : `<a href="#">${task.name}</a>`}</td>
+          <td><input type="text" value="${task.sequence}" ${!isEditing ? "readonly" : ""}></td>
+          <td>${isEditing ? `<textarea>${task.notes}</textarea>` : `<span>${task.notes}</span>`}</td>
+          <td><button class="delete">🗑️</button></td>
+        `;
 
-      const typeCell = document.createElement("td");
-      const typeSelect = document.createElement("select");
-      ["Independent", "Sequential", "Parallel"].forEach(type => {
-        const option = document.createElement("option");
-        option.value = type;
-        option.textContent = type;
-        if (task.type === type) option.selected = true;
-        typeSelect.appendChild(option);
-      });
-      typeCell.appendChild(typeSelect);
+        row.querySelector(".delete").addEventListener("click", () => {
+          row.remove();
+          saveToLocalStorage();
+          updateTaskNumbers();
+        });
 
-      const nameCell = document.createElement("td");
-      const nameInput = document.createElement("input");
-      nameInput.type = "text";
-      nameInput.value = task.name || "";
-      const nameLink = document.createElement("a");
-      nameLink.href = "#";
-      nameLink.textContent = task.name || "";
-      attachNameLinkListener(nameLink, row);
-      nameCell.appendChild(isEditing ? nameInput : nameLink);
+        row.querySelector("a")?.addEventListener("click", (e) => {
+          e.preventDefault();
+          openModal(row);
+        });
 
-      const descCell = document.createElement("td");
-      const descInput = document.createElement("input");
-      descInput.type = "text";
-      descInput.value = task.description || "";
-      descCell.appendChild(descInput);
-
-      const deleteCell = document.createElement("td");
-      const deleteBtn = document.createElement("button");
-      deleteBtn.textContent = "🗑";
-      deleteBtn.className = "outline contrast";
-      deleteBtn.addEventListener("click", () => {
-        row.remove();
+        taskTableBody.appendChild(row);
         updateTaskNumbers();
+        enforceApplicationAfterESignature();
         saveToLocalStorage();
-      });
-      deleteCell.appendChild(deleteBtn);
-
-      row.append(idCell, seqCell, typeCell, nameCell, descCell, deleteCell);
-      return row;
-    }
-
-    function addTask(task = {}) {
-      const row = createTaskRow(task);
-      taskTableBody.appendChild(row);
-      updateTaskNumbers();
-      saveToLocalStorage();
-      enforceApplicationAfterESignature();
-    }
-
-    function updateTaskNumbers() {
-      const rows = Array.from(taskTableBody.querySelectorAll("tr"));
-      let groupCounter = 1;
-      let subCounter = 1;
-      let previousType = "";
-
-      rows.forEach((row, index) => {
-        const type = row.querySelector("select").value;
-        const cell = row.querySelector("td");
-
-        if (type === "Independent") {
-          cell.textContent = groupCounter++;
-          subCounter = 1;
-        } else if (type === "Sequential") {
-          if (previousType === "Sequential") {
-            cell.textContent = `${groupCounter - 1}.${subCounter++}`;
-          } else {
-            subCounter = 1;
-            cell.textContent = `${groupCounter}.${subCounter++}`;
-            groupCounter++;
-          }
-        } else if (type === "Parallel") {
-          if (previousType === "Parallel") {
-            cell.textContent = `${groupCounter - 1}`;
-          } else {
-            cell.textContent = `${groupCounter++}`;
-          }
-        }
-
-        previousType = type;
-      });
-    }
-
-    function toggleEditMode() {
-      isEditing = !isEditing;
-      editToggleBtn.textContent = isEditing ? "Save" : "Edit";
-
-      Array.from(taskTableBody.querySelectorAll("tr")).forEach(row => {
-        const nameCell = row.querySelector("td:nth-child(4)");
-        const currentName = nameCell.textContent.trim();
-        nameCell.innerHTML = "";
-
-        if (isEditing) {
-          const input = document.createElement("input");
-          input.type = "text";
-          input.value = currentName;
-          nameCell.appendChild(input);
-        } else {
-          const anchor = document.createElement("a");
-          anchor.href = "#";
-          anchor.textContent = nameCell.querySelector("input").value;
-          attachNameLinkListener(anchor, row);
-          nameCell.appendChild(anchor);
-        }
-      });
-
-      saveToLocalStorage();
-    }
-
-    function saveToLocalStorage() {
-      const tasks = Array.from(taskTableBody.querySelectorAll("tr")).map(row => ({
-        creationSequence: row.querySelector("td:nth-child(2) input").value,
-        type: row.querySelector("td:nth-child(3) select").value,
-        name: isEditing
-          ? row.querySelector("td:nth-child(4) input").value
-          : row.querySelector("td:nth-child(4) a").textContent,
-        description: row.querySelector("td:nth-child(5) input").value,
-      }));
-      localStorage.setItem("taskManagerData", JSON.stringify(tasks));
-    }
-
-    function loadFromLocalStorage() {
-      const data = JSON.parse(localStorage.getItem("taskManagerData") || "[]");
-      data.forEach(addTask);
-      enforceApplicationAfterESignature();
-    }
-
-    function enforceApplicationAfterESignature() {
-      const taskRows = Array.from(taskTableBody.querySelectorAll("tr"));
-
-      let eSigRow = null;
-      let appRow = null;
-
-      taskRows.forEach(row => {
-        const nameCell = row.querySelector("td:nth-child(4)");
-        const name = nameCell.querySelector("input")?.value?.trim() ||
-          nameCell.querySelector("a")?.textContent?.trim() || "";
-
-        if (name === "eSignature") {
-          eSigRow = row;
-        } else if (name === "Application") {
-          appRow = row;
-        }
-      });
-
-      if (!appRow) return;
-
-      const typeSelect = appRow.querySelector("select");
-      if (typeSelect.value !== "Sequential") {
-        typeSelect.value = "Sequential";
-        typeSelect.dispatchEvent(new Event("change"));
       }
 
-      if (eSigRow && eSigRow !== appRow.previousElementSibling) {
-        const nextSibling = eSigRow.nextSibling;
-        taskTableBody.removeChild(appRow);
-        taskTableBody.insertBefore(appRow, nextSibling);
+      function updateTaskNumbers() {
+        const rows = Array.from(taskTableBody.children);
+        let groupCount = 1;
+
+        for (let i = 0; i < rows.length; i++) {
+          const type = rows[i].querySelector("select").value;
+          const cell = rows[i].querySelector(".task-number");
+
+          // If this is the start of a new group
+          if (type === "Independent") {
+            cell.textContent = `${groupCount}`;
+            groupCount++;
+          } else if (type === "Sequential") {
+            let subCount = 1;
+            cell.textContent = `${groupCount - 1}.${subCount}`;
+            for (let j = i + 1; j < rows.length && rows[j].querySelector("select").value === "Sequential"; j++) {
+              subCount++;
+              rows[j].querySelector(".task-number").textContent = `${groupCount - 1}.${subCount}`;
+              i = j;
+            }
+          } else if (type === "Parallel") {
+            cell.textContent = `${groupCount - 1}`;
+            for (let j = i + 1; j < rows.length && rows[j].querySelector("select").value === "Parallel"; j++) {
+              rows[j].querySelector(".task-number").textContent = `${groupCount - 1}`;
+              i = j;
+            }
+          }
+        }
       }
 
-      updateTaskNumbers();
-    }
+      function saveToLocalStorage() {
+        const tasks = Array.from(taskTableBody.children).map(row => ({
+          type: row.querySelector("select").value,
+          name: row.querySelector("input[type='text'], a").value || row.querySelector("a")?.textContent,
+          sequence: row.querySelector("td:nth-child(5) input").value,
+          notes: isEditing ? row.querySelector("textarea").value : row.querySelector("span").textContent
+        }));
+        localStorage.setItem("taskManagerData", JSON.stringify(tasks));
+      }
 
-    function openTaskModal(row) {
-      alert("Modal for task: " + (isEditing
-        ? row.querySelector("td:nth-child(4) input").value
-        : row.querySelector("td:nth-child(4) a").textContent));
-    }
+      function loadFromLocalStorage() {
+        const tasks = JSON.parse(localStorage.getItem("taskManagerData") || "[]");
+        tasks.forEach(addTask);
+      }
 
-    editToggleBtn.addEventListener("click", toggleEditMode);
+      function enforceApplicationAfterESignature() {
+        const taskRows = Array.from(taskTableBody.querySelectorAll("tr"));
+        const eSigIndex = taskRows.findIndex(row =>
+          (row.querySelector("td:nth-child(4) input")?.value || row.querySelector("td:nth-child(4) a")?.textContent)?.trim() === "eSignature"
+        );
+        const appIndex = taskRows.findIndex(row =>
+          (row.querySelector("td:nth-child(4) input")?.value || row.querySelector("td:nth-child(4) a")?.textContent)?.trim() === "Application"
+        );
 
-    downloadBtn.addEventListener("click", () => {
-      const data = localStorage.getItem("taskManagerData");
-      const blob = new Blob([data], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "tasks.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+        if (appIndex === -1) return;
 
-    uploadInput.addEventListener("change", (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const tasks = JSON.parse(reader.result);
+        const appRow = taskRows[appIndex];
+        const typeCell = appRow.querySelector("td:nth-child(3) select");
+
+        if (typeCell && typeCell.value !== "Sequential") {
+          typeCell.value = "Sequential";
+          typeCell.dispatchEvent(new Event('change'));
+        }
+
+        if (eSigIndex !== -1 && appIndex !== eSigIndex + 1) {
+          const tbody = document.getElementById("taskTableBody");
+          tbody.removeChild(appRow);
+          const target = taskRows[eSigIndex + 1]?.nextSibling || null;
+          tbody.insertBefore(appRow, target);
+        }
+
+        updateTaskNumbers();
+      }
+
+      editToggle.addEventListener("click", () => {
+        isEditing = !isEditing;
+        editToggle.textContent = isEditing ? "Save" : "Edit";
+        rebuildTableFromDOM();
+      });
+
+      applyWorkflowBtn.addEventListener("change", () => {
+        const selected = applyWorkflowBtn.value;
+        if (workflowTemplates[selected]) {
+          taskTableBody.innerHTML = "";
+          workflowTemplates[selected].forEach(addTask);
+          applyWorkflowBtn.selectedIndex = 0;
+        }
+      });
+
+      downloadBtn.addEventListener("click", () => {
+        const data = localStorage.getItem("taskManagerData");
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "tasks.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      uploadInput.addEventListener("change", () => {
+        const file = uploadInput.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          const tasks = JSON.parse(e.target.result);
+          taskTableBody.innerHTML = "";
+          tasks.forEach(addTask);
+        };
+        reader.readAsText(file);
+      });
+
+      function rebuildTableFromDOM() {
+        const tasks = Array.from(taskTableBody.children).map(row => ({
+          type: row.querySelector("select").value,
+          name: row.querySelector("input[type='text'], a").value || row.querySelector("a")?.textContent,
+          sequence: row.querySelector("td:nth-child(5) input").value,
+          notes: isEditing ? row.querySelector("textarea").value : row.querySelector("span").textContent
+        }));
+
         taskTableBody.innerHTML = "";
         tasks.forEach(addTask);
-        enforceApplicationAfterESignature();
-      };
-      reader.readAsText(file);
-    });
-
-    applyWorkflowBtn.addEventListener("change", () => {
-      const selected = applyWorkflowBtn.value;
-      applyWorkflowBtn.value = "";
-      if (selected === "Risk Policy Opening") {
-        addTask({ name: "Open Case", type: "Independent" });
-        addTask({ name: "eSignature", type: "Sequential" });
-        addTask({ name: "Application", type: "Sequential" });
-        addTask({ name: "Underwriting", type: "Parallel" });
-      } else if (selected === "Wealth Account Opening") {
-        addTask({ name: "Open Case", type: "Independent" });
-        addTask({ name: "eSignature", type: "Sequential" });
-        addTask({ name: "Application", type: "Sequential" });
-        addTask({ name: "Delivery", type: "Parallel" });
       }
-      enforceApplicationAfterESignature();
-    });
 
-    new Sortable(taskTableBody, {
-      animation: 150,
-      onEnd: () => {
-        enforceApplicationAfterESignature();
-        updateTaskNumbers();
-        saveToLocalStorage();
-      },
-    });
+      loadFromLocalStorage();
 
-    loadFromLocalStorage();
+      // Make table sortable
+      new Sortable(taskTableBody, {
+        handle: ".handle",
+        animation: 150,
+        onEnd: () => {
+          enforceApplicationAfterESignature();
+          updateTaskNumbers();
+          saveToLocalStorage();
+        }
+      });
+    });
   </script>
+
 </body>
+
 </html>
