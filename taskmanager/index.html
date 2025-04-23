@@ -261,7 +261,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <script>
-    const taskTableBody = document.querySelector("#taskTable tbody");
+    const taskTable = document.getElementById("taskTable");
+    const taskTableBody = taskTable.querySelector("tbody");
     const editToggleBtn = document.getElementById("toggleEdit");
     const applyWorkflowBtn = document.getElementById("applyWorkflow");
 
