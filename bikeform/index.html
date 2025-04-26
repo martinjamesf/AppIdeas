@@ -3,16 +3,83 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bike Form - A DIY Bike Fit Tool</title>
+  <title>DIY Bike Fit Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
   <style>
-    .fit-result { margin-top: 2rem; }
-    video { max-width: 100%; margin-top: 1rem; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      background: linear-gradient(to bottom right, #00AEEF, #0076A8);
+      color: #fff;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(0,0,0,0.2);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    header .actions button {
+      margin-left: 0.5rem;
+      background: #005f87;
+      border: none;
+      padding: 0.5rem 1rem;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    main {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      padding: 2rem;
+    }
+    section, form {
+      background: white;
+      color: black;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    h2 {
+      border-bottom: 2px solid #00AEEF;
+      padding-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+    }
+    video {
+      width: 100%;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+    .fit-result ul {
+      list-style: none;
+      padding: 0;
+    }
+    .fit-result ul li {
+      margin-bottom: 0.5rem;
+    }
   </style>
 </head>
 <body>
-  <main class="container">
-    <h1>DIY Bike Fit</h1>
+  <header>
+    <h1>Bike Fit Session</h1>
+    <div class="actions">
+      <button>Save As</button>
+      <button>Email</button>
+      <button>Print</button>
+    </div>
+  </header>
+
+  <main>
     <form id="fitForm">
       <h2>Body Measurements</h2>
       <label>Height (cm) <input type="number" id="height" required /></label>
@@ -34,11 +101,28 @@
       <ul id="recommendations"></ul>
     </section>
 
-    <hr />
+    <section>
+      <h2>Operator Information</h2>
+      <label>Operator Name <input type="text" id="operatorName" placeholder="Your Name" /></label>
+      <label>Notes
+        <textarea id="notes" placeholder="First race bike, crit season, goals, etc."></textarea>
+      </label>
+    </section>
 
-    <h2>Video Upload (Beta)</h2>
-    <input type="file" id="videoUpload" accept="video/*" />
-    <video id="uploadedVideo" controls></video>
+    <section>
+      <h2>Video Upload (Beta)</h2>
+      <input type="file" id="videoUpload" accept="video/*" />
+      <video id="uploadedVideo" controls></video>
+    </section>
+
+    <section>
+      <h2>Equipment Information</h2>
+      <ul>
+        <li><strong>Saddle Name:</strong> Test</li>
+        <li><strong>Saddle Thickness:</strong> 50</li>
+        <li><strong>Saddle Clamp to Nose:</strong> 135</li>
+      </ul>
+    </section>
   </main>
 
   <script>
