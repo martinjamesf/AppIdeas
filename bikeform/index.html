@@ -1,85 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DIY Bike Fit Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <title>DIY Bike Fit</title>
   <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@latest/css/pico.min.css" />
   <style>
     body {
-      font-family: 'Roboto', sans-serif;
-      margin: 0;
-      background: linear-gradient(to bottom right, #00AEEF, #0076A8);
+      background: linear-gradient(180deg, #0f0f1b 0%, #1b1b2f 100%);
       color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
+
     header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 2rem;
-      background: rgba(0,0,0,0.2);
+      text-align: center;
+      padding: 2rem 1rem 0 1rem;
     }
-    header h1 {
-      margin: 0;
-      font-size: 1.8rem;
-    }
-    header .actions button {
-      margin-left: 0.5rem;
-      background: #005f87;
-      border: none;
-      padding: 0.5rem 1rem;
-      color: #fff;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    main {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1rem;
-      padding: 2rem;
-    }
-    section, form {
-      background: white;
-      color: black;
-      padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    h2 {
-      border-bottom: 2px solid #00AEEF;
-      padding-bottom: 0.5rem;
-      margin-bottom: 1rem;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.75rem;
-    }
-    video {
+
+    svg.background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
       width: 100%;
-      border-radius: 8px;
+      height: 100%;
+      opacity: 0.15;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      color: #66f6ff;
+    }
+
+    label input {
+      background: #141426;
+      border: 1px solid #444;
+      color: #fff;
+    }
+
+    button {
+      background-color: #66f6ff;
+      color: #000;
+    }
+
+    .fit-result {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #111827;
+      border-left: 4px solid #66f6ff;
+    }
+
+    video {
+      max-width: 100%;
       margin-top: 1rem;
+      border-radius: 0.5rem;
     }
-    .fit-result ul {
-      list-style: none;
-      padding: 0;
-    }
-    .fit-result ul li {
-      margin-bottom: 0.5rem;
+
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      font-size: 0.9rem;
+      opacity: 0.6;
     }
   </style>
 </head>
-<body>
-  <header>
-    <h1>Bike Fit Session</h1>
-    <div class="actions">
-      <button>Save As</button>
-      <button>Email</button>
-      <button>Print</button>
-    </div>
-  </header>
 
-  <main>
+<body>
+  <!-- Retro SVG Background -->
+  <svg class="background" viewBox="0 0 100 100" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="gridGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#66f6ff;stop-opacity:0.3" />
+        <stop offset="100%" style="stop-color:#66f6ff;stop-opacity:0" />
+      </linearGradient>
+    </defs>
+    <g stroke="url(#gridGradient)" stroke-width="0.1">
+      <!-- Horizontal lines -->
+      ${Array.from({length: 20}, (_, i) => `
+      <line x1="0" y1="${i * 5}" x2="100" y2="${i * 5}" />`).join('')}
+      <!-- Vertical lines -->
+      ${Array.from({length: 20}, (_, i) => `
+      <line y1="0" x1="${i * 5}" y2="100" x2="${i * 5}" />`).join('')}
+    </g>
+  </svg>
+
+  <main class="container">
+    <header>
+      <h1>DIY Bike Fit</h1>
+      <p>Get personalized bike adjustments based on your body geometry</p>
+    </header>
+
     <form id="fitForm">
       <h2>Body Measurements</h2>
       <label>Height (cm) <input type="number" id="height" required /></label>
@@ -101,28 +114,15 @@
       <ul id="recommendations"></ul>
     </section>
 
-    <section>
-      <h2>Operator Information</h2>
-      <label>Operator Name <input type="text" id="operatorName" placeholder="Your Name" /></label>
-      <label>Notes
-        <textarea id="notes" placeholder="First race bike, crit season, goals, etc."></textarea>
-      </label>
-    </section>
+    <hr />
 
-    <section>
-      <h2>Video Upload (Beta)</h2>
-      <input type="file" id="videoUpload" accept="video/*" />
-      <video id="uploadedVideo" controls></video>
-    </section>
+    <h2>Video Upload (Beta)</h2>
+    <input type="file" id="videoUpload" accept="video/*" />
+    <video id="uploadedVideo" controls></video>
 
-    <section>
-      <h2>Equipment Information</h2>
-      <ul>
-        <li><strong>Saddle Name:</strong> Test</li>
-        <li><strong>Saddle Thickness:</strong> 50</li>
-        <li><strong>Saddle Clamp to Nose:</strong> 135</li>
-      </ul>
-    </section>
+    <footer>
+      <p>&copy; 2025 James F. | DIY Bike Fit</p>
+    </footer>
   </main>
 
   <script>
@@ -147,6 +147,7 @@
       `;
 
       result.hidden = false;
+      result.scrollIntoView({ behavior: "smooth" });
     });
 
     // Video Upload Preview
@@ -161,4 +162,5 @@
     });
   </script>
 </body>
+
 </html>
