@@ -1,15 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Task Manager Tree</title>
-  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Task Manager with Types (Independent, Sequential, Parallel)</title>
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@1.5.10/css/pico.min.css">
+  <style>
+    .task-table {
+      width: 100%;
+    }
+    .task-name {
+      white-space: nowrap;
+    }
+    .nested-depth-0 .task-name { padding-left: 0rem; }
+    .nested-depth-1 .task-name { padding-left: 1rem; }
+    .nested-depth-2 .task-name { padding-left: 2rem; }
+    .nested-depth-3 .task-name { padding-left: 3rem; }
+    .nested-depth-4 .task-name { padding-left: 4rem; }
+
+    .task-type-label {
+      font-weight: bold;
+      color: #555;
+    }
+
+    .ghost-task {
+      background-color: #f8d7da;
+    }
+    .parallel-task {
+      background-color: #d4edda;
+    }
+  </style>
 </head>
 <body>
-  <div id="task-tree" class="task-tree"></div>
+<main class="container">
+  <h1>Task Manager with Types</h1>
+  <table id="taskTable" class="task-table">
+    <thead>
+      <tr>
+        <th>Task Name</th>
+        <th>Task Type</th>
+      </tr>
+    </thead>
+    <tbody id="taskBody">
+      <!-- Tasks rendered here -->
+    </tbody>
+  </table>
+  <button id="addTask">Add Task</button>
+</main>
 
-  <script src="https://unpkg.com/@atlaskit/pragmatic-drag-and-drop/element/adapter.js"></script>
-  <script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+  let taskIdCounter = 1;
+  let tasks = [
+    { id: generateId(), name: "Task A", depth: 0, type: "Independent", isGhost: false },
+    { id: generateId(), name: "Task B", depth: 0, type: "Sequential", isGhost: true },
+    { id: generateId(), name: "Task C", depth: 0, type: "Sequential", isGhost: true }
+  ];
+
+  function generateId() {
+    return `task-${taskIdCounter++}`;
+  }
+
+  function renderTasks() {
+    const tbody = document.getElementById("taskBody");
+    tbody.innerHTML = "";
+    tasks.forEach(task => {
+      const row = document.createElement("tr");
+      row.setAttribute("data-id", task.id);
+      row.setAttribute("data-depth", task.depth);
+      row.className = `nested-depth-${task.depth} ${task.isGhost ? 'ghost-task' : ''} ${task.type === 'Parallel' ? 'parallel-task' : ''}`;
+
+      const tdName = document.createElement("td");
+      tdName.className = "task-name";
+      tdName.textContent = task.name;
+      row.appendChild(tdName);
+
+      const tdType = document.createElement("td");
+      tdType.className = "task-type-label";
+      tdType.textContent = `${task.type}${task.isGhost ? ' (Ghost)' : ''}`;
+      row.appendChild(tdType);
+
+      tbody.appendChild(row);
+    });
+  }
+
+  function makeSortable() {
+    new Sortable(taskBody, {
+      animation: 150,
+      onEnd: function (evt) {
+        const newOrder = Array.from(taskBody.children).map((row, i) => {
+          const id = row.getAttribute("data-id");
+          return tasks.find(t => t.id === id);
+        });
+
+        // Update the task types and ghost status based on the order
+        updateTaskTypesAndGhostStatus();
+
+        tasks = newOrder;
+        renderTasks();
+        makeSortable();
+      }
+    });
+  }
+
+  function updateTaskTypesAndGhostStatus() {
+    let sequentialTasks = [];
+    let parallelTasks = [];
+    let independentTasks = [];
+
+    // Classify tasks by type
+    tasks.forEach(task => {
+      if (task.type === "Sequential") {
+        sequentialTasks.push(task);
+      } else if (task.type === "Parallel") {
+        parallelTasks.push(task);
+      } else {
+        independentTasks.push(task);
+      }
+    });
+
+    // Mark sequential tasks with 'Ghost' if any prior task is incomplete
+    sequentialTasks.forEach((task, index) => {
+      task.isGhost = index > 0 && !sequentialTasks[index - 1].isGhost;
+    });
+
+    // Mark parallel tasks as not ghost
+    parallelTasks.forEach(task => {
+      task.isGhost = false;
+    });
+
+    // Update the overall task list
+    tasks = [...independentTasks, ...sequentialTasks, ...parallelTasks];
+  }
+
+  document.getElementById("addTask").addEventListener("click", () => {
+    const newTaskType = prompt("Enter task type (Independent, Sequential, Parallel):", "Independent");
+    tasks.push({ id: generateId(), name: `New Task`, depth: 0, type: newTaskType, isGhost: newTaskType === "Sequential" });
+    renderTasks();
+    makeSortable();
+  });
+
+  renderTasks();
+  makeSortable();
+</script>
 </body>
 </html>
