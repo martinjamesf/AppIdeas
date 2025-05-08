@@ -1,0 +1,20 @@
+.task-tree {
+  padding: 1rem;
+  max-width: 600px;
+  margin: auto;
+  font-family: sans-serif;
+}
+
+.task-item {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  margin-bottom: 0.5rem;
+  background-color: #fff;
+  cursor: grab;
+}
+
+.task-children {
+  margin-left: 1rem;
+  border-left: 2px dashed #ccc;
+  padding-left: 1rem;
+}
