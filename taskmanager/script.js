@@ -1,9 +1,8 @@
-const { draggable, dropTargetForElements } = window['@atlaskit/pragmatic-drag-and-drop/element/adapter'];
-
+// Sample hierarchical task data
 let tasks = [
   {
     id: '1',
-    title: 'Task 1',
+    title: 'Main Task 1',
     children: [
       {
         id: '1-1',
@@ -14,82 +13,97 @@ let tasks = [
   },
   {
     id: '2',
-    title: 'Task 2',
+    title: 'Main Task 2',
     children: [],
   },
 ];
 
-const taskTreeContainer = document.getElementById('task-tree');
-
-function renderTasks(tasks, container) {
+// Function to render the task tree
+function renderTasks(container, tasks) {
   container.innerHTML = '';
-  tasks.forEach((task) => {
-    const taskElement = document.createElement('div');
-    taskElement.className = 'task-item';
-    taskElement.textContent = task.title;
-    taskElement.dataset.id = task.id;
-
-    // Make the task draggable
-    draggable({
-      element: taskElement,
-      getInitialData: () => ({ id: task.id }),
-    });
-
-    // Make the task a drop target
-    dropTargetForElements({
-      element: taskElement,
-      onDrop: ({ source }) => {
-        const sourceId = source.data.id;
-        const targetId = task.id;
-        if (sourceId !== targetId) {
-          moveTask(sourceId, targetId);
-          renderTasks(tasks, taskTreeContainer);
-        }
-      },
-    });
-
+  tasks.forEach(task => {
+    const taskElement = createTaskElement(task);
     container.appendChild(taskElement);
-
-    if (task.children && task.children.length > 0) {
-      const childrenContainer = document.createElement('div');
-      childrenContainer.className = 'task-children';
-      renderTasks(task.children, childrenContainer);
-      container.appendChild(childrenContainer);
-    }
   });
 }
 
-function findAndRemoveTask(taskList, taskId) {
+// Function to create a task element
+function createTaskElement(task) {
+  const taskDiv = document.createElement('div');
+  taskDiv.className = 'task-node';
+  taskDiv.textContent = task.title;
+  taskDiv.setAttribute('data-id', task.id);
+
+  // Make the task draggable
+  draggable({
+    element: taskDiv,
+    getInitialData: () => ({ id: task.id }),
+  });
+
+  // Make the task a drop target
+  dropTargetForElements({
+    element: taskDiv,
+    onDrop: ({ source }) => {
+      const sourceId = source.data.id;
+      const targetId = task.id;
+      if (sourceId !== targetId) {
+        moveTask(sourceId, targetId);
+        renderTasks(document.getElementById('task-tree'), tasks);
+      }
+    },
+  });
+
+  // Render children if any
+  if (task.children && task.children.length > 0) {
+    const childrenContainer = document.createElement('div');
+    childrenContainer.className = 'task-children';
+    task.children.forEach(child => {
+      const childElement = createTaskElement(child);
+      childrenContainer.appendChild(childElement);
+    });
+    taskDiv.appendChild(childrenContainer);
+  }
+
+  return taskDiv;
+}
+
+// Function to find and remove a task by ID
+function removeTaskById(taskList, id) {
   for (let i = 0; i < taskList.length; i++) {
-    if (taskList[i].id === taskId) {
+    if (taskList[i].id === id) {
       return taskList.splice(i, 1)[0];
     } else if (taskList[i].children) {
-      const result = findAndRemoveTask(taskList[i].children, taskId);
+      const result = removeTaskById(taskList[i].children, id);
       if (result) return result;
     }
   }
   return null;
 }
 
-function findTaskById(taskList, taskId) {
-  for (let task of taskList) {
-    if (task.id === taskId) {
+// Function to find a task by ID
+function findTaskById(taskList, id) {
+  for (const task of taskList) {
+    if (task.id === id) {
       return task;
     } else if (task.children) {
-      const result = findTaskById(task.children, taskId);
+      const result = findTaskById(task.children, id);
       if (result) return result;
     }
   }
   return null;
 }
 
+// Function to move a task under a new parent
 function moveTask(sourceId, targetId) {
-  const taskToMove = findAndRemoveTask(tasks, sourceId);
+  const sourceTask = removeTaskById(tasks, sourceId);
   const targetTask = findTaskById(tasks, targetId);
-  if (taskToMove && targetTask) {
+  if (targetTask && sourceTask) {
     targetTask.children = targetTask.children || [];
-    targetTask.children.push(taskToMove);
+    targetTask.children.push(sourceTask);
   }
 }
 
-renderTasks(tasks, taskTreeContainer);
+// Initial render
+document.addEventListener('DOMContentLoaded', () => {
+  renderTasks(document.getElementById('task-tree'), tasks);
+});
